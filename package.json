@@ -1,0 +1,40 @@
+***REMOVED***
+  "name": "shulker",
+  "version": "3.0.0",
+  "description": "A Discord to Minecraft Chat Gateway",
+  "main": "build/index.js",
+  "scripts": ***REMOVED***
+    "start": "node build/index.js",
+    "build": "tsc",
+    "test": "standard"
+  ***REMOVED***,
+  "repository": ***REMOVED***
+    "type": "git",
+    "url": "git+https://github.com/destruc7i0n/shulker.git"
+  ***REMOVED***,
+  "keywords": [
+    "Discord",
+    "Bot"
+  ],
+  "author": "destruc7i0n",
+  "license": "ISC",
+  "bugs": ***REMOVED***
+    "url": "https://github.com/destruc7i0n/shulker/issues"
+  ***REMOVED***,
+  "homepage": "https://github.com/destruc7i0n/shulker#readme",
+  "dependencies": ***REMOVED***
+    "axios": "^0.19.2",
+    "discord.js": "^11.5.1",
+    "emoji-strip": "^1.0.1",
+    "express": "^4.17.1",
+    "tail": "^2.0.3"
+  ***REMOVED***,
+  "devDependencies": ***REMOVED***
+    "@types/emoji-strip": "^1.0.0",
+    "@types/express": "^4.17.2",
+    "@types/tail": "^2.0.0",
+    "standard": "^14.3.1",
+    "tslint-config-standard": "^9.0.0",
+    "typescript": "^3.7.5"
+  ***REMOVED***
+***REMOVED***
