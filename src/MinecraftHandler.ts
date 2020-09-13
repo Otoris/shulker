@@ -78,7 +78,6 @@ class MinecraftHandler ***REMOVED***
       return ***REMOVED*** username, message ***REMOVED***
     ***REMOVED*** else if (
       this.config.SHOW_PLAYER_CONN_STAT && (
-        logLine.includes('left the game') ||
         logLine.includes('joined the game')
       )
     ) ***REMOVED***
