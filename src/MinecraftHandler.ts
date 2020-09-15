@@ -57,7 +57,7 @@ class MinecraftHandler ***REMOVED***
     const serverUsername = `$***REMOVED***this.config.SERVER_NAME***REMOVED*** - Server`
 
     if (this.config.DEBUG) ***REMOVED***
-      console.log('[DEBUG]: Parsing: ', logLine)
+      console.log('[DEBUG]: Parsing: ', logLine, ' :or: ', logLineData)
     ***REMOVED***
 
     if (logLine.startsWith('<')) ***REMOVED***
