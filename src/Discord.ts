@@ -114,7 +114,7 @@ class Discord ***REMOVED***
         console.log('[INFO] User attempted a slash command without a role')
       ***REMOVED***
     ***REMOVED*** else ***REMOVED***
-      command = `/tellraw @a $***REMOVED***this.makeMinecraftTellraw(message)***REMOVED***`
+      command = `tellraw @a $***REMOVED***this.makeMinecraftTellraw(message)***REMOVED***`
     ***REMOVED***
 
     if (this.config.DEBUG) console.log(`[DEBUG] Sending command "$***REMOVED***command***REMOVED***" to the server`)
