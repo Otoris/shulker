@@ -56,6 +56,10 @@ class MinecraftHandler ***REMOVED***
     // the username used for server messages
     const serverUsername = `$***REMOVED***this.config.SERVER_NAME***REMOVED*** - Server`
 
+    if (this.config.DEBUG) ***REMOVED***
+      console.log('[DEBUG]: Parsing: ', logLine)
+    ***REMOVED***
+
     if (logLine.startsWith('<')) ***REMOVED***
       if (this.config.DEBUG)***REMOVED***
         console.log('[DEBUG]: A player sent a chat message')
