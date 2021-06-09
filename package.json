@@ -8,6 +8,7 @@
   ***REMOVED***,
   "scripts": ***REMOVED***
     "start": "node build/index.js",
+    "build": "tsc",
     "test": "standard"
   ***REMOVED***,
   "repository": ***REMOVED***

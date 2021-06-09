@@ -92,7 +92,7 @@ class Discord ***REMOVED***
       ***REMOVED***
     ***REMOVED***
     // if the same user as the bot, ignore
-    if (message.author.id === this.client.user.id) return
+    if (message.author.id === this.client?.user?.id) return
     // ignore any attachments
     if (message.attachments.array().length) return
 
@@ -107,7 +107,7 @@ class Discord ***REMOVED***
     let command = ''
     if (this.config.ALLOW_SLASH_COMMANDS && this.config.SLASH_COMMAND_ROLES && message.cleanContent.startsWith('/')) ***REMOVED***
       const author = message.member
-      if (author.roles.find(r => this.config.SLASH_COMMAND_ROLES.includes(r.name))) ***REMOVED***
+      if (author?.roles.cache.find(r => this.config.SLASH_COMMAND_ROLES.includes(r.name))) ***REMOVED***
         // send the raw command, can be dangerous...
         command = message.cleanContent
       ***REMOVED*** else ***REMOVED***
@@ -131,7 +131,7 @@ class Discord ***REMOVED***
   private makeMinecraftTellraw(message: Message): string ***REMOVED***
     const variables: ***REMOVED***[index: string]: string***REMOVED*** = ***REMOVED***
       username: emojiStrip(message.author.username),
-      nickname: message.member.nickname ? emojiStrip(message.member.nickname) : emojiStrip(message.author.username),
+      nickname: message?.member?.nickname ? emojiStrip(message.member.nickname) : emojiStrip(message.author.username),
       discriminator: message.author.discriminator,
       text: emojiStrip(message.cleanContent)
     ***REMOVED***
@@ -155,7 +155,7 @@ class Discord ***REMOVED***
         let username = mentionParts[0].replace('@', '')
         if (mentionParts.length > 1) ***REMOVED***
           if (this.config.ALLOW_USER_MENTIONS) ***REMOVED***
-            const user = this.client.users.find(user => user.username === username && user.discriminator === mentionParts[1])
+            const user = this.client.users.cache.find(user => user.username === username && user.discriminator === mentionParts[1])
             if (user) ***REMOVED***
               message = message.replace(mention, '<@' + user.id + '>')
             ***REMOVED***
@@ -211,7 +211,7 @@ class Discord ***REMOVED***
       ***REMOVED***
     ***REMOVED*** else ***REMOVED***
       // find the channel
-      const channel = this.client.channels.find((ch) => ch.id === this.config.DISCORD_CHANNEL_ID && ch.type === 'text') as TextChannel
+      const channel = this.client.channels.cache.find((ch) => ch.id === this.config.DISCORD_CHANNEL_ID && ch.type === 'text') as TextChannel
       if (channel) ***REMOVED***
         await channel.send(this.makeDiscordMessage(username, message))
       ***REMOVED*** else ***REMOVED***
