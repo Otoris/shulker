@@ -3,6 +3,9 @@
   "version": "3.0.0",
   "description": "A Discord to Minecraft Chat Gateway",
   "main": "build/index.js",
+  "engines": ***REMOVED***
+    "node": "v15.13.0"
+  ***REMOVED***,
   "scripts": ***REMOVED***
     "start": "node build/index.js",
     "build": "tsc",
