@@ -82,7 +82,7 @@ class MinecraftHandler ***REMOVED***
       return ***REMOVED*** username, message ***REMOVED***
     ***REMOVED*** else if (
       this.config.SHOW_PLAYER_CONN_STAT && (
-        logLine.includes('joined the game')
+        logLine.includes('logged in') //joined the game (vanilla)
       )
     ) ***REMOVED***
       // handle disconnection etc.
