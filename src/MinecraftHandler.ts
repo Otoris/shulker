@@ -51,7 +51,7 @@ class MinecraftHandler ***REMOVED***
       return null
     ***REMOVED***
 
-    const logLine = logLineData[1]
+    const logLine = logLineData[2]
 
     // the username used for server messages
     const serverUsername = `$***REMOVED***this.config.SERVER_NAME***REMOVED*** - Server`
