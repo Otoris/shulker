@@ -109,15 +109,14 @@ class MinecraftHandler ***REMOVED***
         return ***REMOVED*** username: serverUsername, message: `**$***REMOVED***username***REMOVED***** $***REMOVED***rest***REMOVED***` ***REMOVED***
       ***REMOVED***
     ***REMOVED*** else if (this.config.SHOW_PLAYER_DEATH) ***REMOVED***
-      for (let word of this.config.DEATH_KEY_WORDS)***REMOVED***
-        if (data.includes(word))***REMOVED***
-          if (this.config.DEBUG) ***REMOVED***
-            console.log(
-              `[DEBUG] A player died. Matched key word "$***REMOVED***word***REMOVED***"`
-            )
-          ***REMOVED***
-          return ***REMOVED*** username: serverUsername, message: logLine ***REMOVED***
+      const deathMessageRegex = new RegExp(this.config.REGEX_DEATH_MESSAGE ?? '^[\\w_]+ died')
+      const deathMessageMatch = logLine.match(deathMessageRegex)
+
+      if (deathMessageMatch) ***REMOVED***
+        if (this.config.DEBUG) ***REMOVED***
+          console.log(`[DEBUG] A player died. Matched on "$***REMOVED***deathMessageMatch[1]***REMOVED***"`)
         ***REMOVED***
+        return ***REMOVED*** username: serverUsername, message: logLine ***REMOVED***
       ***REMOVED***
     ***REMOVED***
 
