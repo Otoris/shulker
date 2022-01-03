@@ -89,8 +89,11 @@ class MinecraftHandler ***REMOVED***
       if (this.config.DEBUG)***REMOVED***
         console.log(`[DEBUG]: A player's connection status changed`)
       ***REMOVED***
-
-      return ***REMOVED*** username: serverUsername, message: logLine ***REMOVED***
+      const bukkitCheck = logLine.match(/.+?(?=\[\/)/)
+      if (bukkitCheck) ***REMOVED***
+        return ***REMOVED*** username: serverUsername, message: `$***REMOVED***bukkitCheck[0]***REMOVED*** joined the game` ***REMOVED***
+      ***REMOVED***
+      
     ***REMOVED*** else if (this.config.SHOW_PLAYER_ADVANCEMENT && logLine.includes('made the advancement')) ***REMOVED***
       // handle advancements
       if (this.config.DEBUG)***REMOVED***
