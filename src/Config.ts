@@ -36,7 +36,8 @@ export interface Config ***REMOVED***
 
   SERVER_NAME: string
   SERVER_IMAGE: string
-  SHOW_PLAYER_CONN_STAT: boolean
+  SHOW_PLAYER_CONN_JOIN: boolean
+  SHOW_PLAYER_CONN_LEAVE: boolean
   SHOW_PLAYER_ADVANCEMENT: boolean
   SHOW_PLAYER_DEATH: boolean
   SHOW_PLAYER_ME: boolean
