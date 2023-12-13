@@ -1,5 +1,5 @@
-declare namespace Express ***REMOVED***
-  export interface Request ***REMOVED***
+declare namespace Express {
+  export interface Request {
     rawBody?: string
-  ***REMOVED***
-***REMOVED***
+  }
+}

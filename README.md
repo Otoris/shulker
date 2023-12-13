@@ -52,12 +52,12 @@ You can also easily Deploy to Heroku and the like, just be sure to edit `YOUR_UR
 
 ### Configuration
 ```js
-***REMOVED***
-***REMOVED*** /* Port you want to run the webserver for the hook on */
+{
+    "PORT": 8000, /* Port you want to run the webserver for the hook on */
     
-***REMOVED*** /* If you want to use snazzy webhooks */
+    "USE_WEBHOOKS": true, /* If you want to use snazzy webhooks */
     "WEBHOOK_URL": "DISCORD_WEBHOOK_URL_HERE", /* Be sure to create a webhook in the channel settings and place it here! */
-***REMOVED*** /* Ignore any messages that are sent by webhooks. If disabled, then all webhooks but those sent from the configured webhook will be handled as well */
+    "IGNORE_WEBHOOKS": true, /* Ignore any messages that are sent by webhooks. If disabled, then all webhooks but those sent from the configured webhook will be handled as well */
     "DISCORD_TOKEN": "<12345>", /* Discord bot token. [Click here](https://discordapp.com/developers/applications/me) to create you application and add a bot to it. */
     "DISCORD_CHANNEL_ID": "<channel>", /* Discord channel ID for for the discord bot. Enable developer mode in your Discord client, then right click channel and select "Copy ID". */
     "DISCORD_CHANNEL_NAME": "#<channel name>" /* The Discord channel name. It is recommended to use the ID if the bot is in multiple servers. The ID will take precedence. */
@@ -66,32 +66,32 @@ You can also easily Deploy to Heroku and the like, just be sure to edit `YOUR_UR
     "MINECRAFT_SERVER_RCON_IP": "127.0.0.1", /* Minecraft server IP (make sure you have enabled rcon) */
     "MINECRAFT_SERVER_RCON_PORT": <1-65535>, /* Minecraft server rcon port */
     "MINECRAFT_SERVER_RCON_PASSWORD": "<your password>", /* Minecraft server rcon password */
-    "MINECRAFT_TELLRAW_TEMPLATE": "[***REMOVED***\"color\": \"white\", \"text\": \"<%username%> %message%\"***REMOVED***]", /* Tellraw template to display in Minecraft */
+    "MINECRAFT_TELLRAW_TEMPLATE": "[{\"color\": \"white\", \"text\": \"<%username%> %message%\"}]", /* Tellraw template to display in Minecraft */
     
-***REMOVED*** /* should tail the local file, may be a little buggy. please report any you find */
-***REMOVED*** /* the path to the local file if specified */
+    "IS_LOCAL_FILE": false, /* should tail the local file, may be a little buggy. please report any you find */
+    "LOCAL_FILE_PATH": "/usr/home/minecraft_server/logs/latest.log", /* the path to the local file if specified */
 
-***REMOVED*** /* Sends the message on boot if not a local file of what command to run */ 
+    "SHOW_INIT_MESSAGE": true, /* Sends the message on boot if not a local file of what command to run */ 
 
     "ALLOW_USER_MENTIONS": false, /* should replace @mentions with the mention in discord (format: @username#discriminator) */
-***REMOVED*** /* replaces @everyone and @here with "@ everyone" and "@ here" respectively */
-***REMOVED*** /* whether to allow users to run slash commands from discord */
-***REMOVED*** /* if the above is enabled, the names of the roles which can run slash commands */
+    "ALLOW_HERE_EVERYONE_MENTIONS": false, /* replaces @everyone and @here with "@ everyone" and "@ here" respectively */
+    "ALLOW_SLASH_COMMANDS": false, /* whether to allow users to run slash commands from discord */
+    "SLASH_COMMAND_ROLES": [], /* if the above is enabled, the names of the roles which can run slash commands */
     
-***REMOVED*** /* Web hook, where to send the log to */
+    "WEBHOOK": "/minecraft/hook", /* Web hook, where to send the log to */
     "REGEX_SERVER_PREFIX": "\\[Server thread/INFO\\]:", /* What the lines of the log should start with */
-***REMOVED*** /* What to match for chat (best to leave as default) */
-***REMOVED*** /* What to ignore, you can put any regex for swear words for example and it will  be ignored */
+    "REGEX_MATCH_CHAT_MC": "^<([^>]*)> (.*)", /* What to match for chat (best to leave as default) */
+    "REGEX_IGNORED_CHAT": "packets too frequently", /* What to ignore, you can put any regex for swear words for example and it will  be ignored */
     "DEBUG": false, /* Dev debugging */
 
     "SERVER_NAME": "Shulker", /* The username used when displaying any server information in chat, e.g., Server - Shulker : Server message here*/
-***REMOVED*** /* Image for the server when sending such messages (if enabled below). Only for WebHooks. */
+    "SERVER_IMAGE": "", /* Image for the server when sending such messages (if enabled below). Only for WebHooks. */
     "SHOW_PLAYER_CONN_STAT": false, /* Shows player connection status in chat, e.g., Server - Shulker : TheMachine joined the game */
-***REMOVED*** /* Shows when players earn advancements in chat, e.g., Server - Shulker : TheMachine has made the advacement [MEME - Machine] */
+    "SHOW_PLAYER_ADVANCEMENT": false, /* Shows when players earn advancements in chat, e.g., Server - Shulker : TheMachine has made the advacement [MEME - Machine] */
     "SHOW_PLAYER_DEATH": false, /* Shows when players die in chat, e.g., Server - Shulker : TheMachine was blown up by creeper */
     "SHOW_PLAYER_ME": false, /* Shows when players use the /me command, e.g. **destruc7i0n** says hello */
     "DEATH_KEY_WORDS": ["shot", "fell", "etc".] /* Key words to look for when trying to identify a death message. (As of 3/11/2019 this list is up to date) */
-***REMOVED***
+}
 ```
 
 ## FAQ

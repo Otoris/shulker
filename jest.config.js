@@ -1,5 +1,5 @@
-/** @type ***REMOVED***import('ts-jest').JestConfigWithTsJest***REMOVED*** */
-module.exports = ***REMOVED***
+/** @type {import('ts-jest').JestConfigWithTsJest} */
+module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-***REMOVED***;
+};

@@ -1,44 +1,44 @@
 import DiscordClient from './Discord'
-import Handler, ***REMOVED*** LogLine ***REMOVED*** from './MinecraftHandler'
+import Handler, { LogLine } from './MinecraftHandler'
 
-import ***REMOVED*** Config ***REMOVED*** from './Config'
+import { Config } from './Config'
 
-class Shulker ***REMOVED***
+class Shulker {
   config: Config
   discordClient: DiscordClient
   handler: Handler
 
-  constructor() ***REMOVED***
-  ***REMOVED***
+  constructor() {
+  }
 
-  loadConfig () ***REMOVED***
+  loadConfig () {
     const configFile = (process.argv.length > 2) ? process.argv[2] : '../config.json'
     console.log('[INFO] Using configuration file:', configFile)
     this.config = require(configFile)
-    if (!this.config) ***REMOVED***
+    if (!this.config) {
       console.log('[ERROR] Could not load config file!')
       return false
-    ***REMOVED***
+    }
 
-    if (this.config.USE_WEBHOOKS) ***REMOVED***
+    if (this.config.USE_WEBHOOKS) {
       console.log('[INFO] Using Discord WebHooks to send messages')
-    ***REMOVED*** else ***REMOVED***
+    } else {
       console.log('[INFO] Using the Discord bot to send messages')
-    ***REMOVED***
+    }
 
     return true
-  ***REMOVED***
+  }
 
-  onDiscordReady () ***REMOVED***
-    this.handler.init(async (data: LogLine) => ***REMOVED***
-      if (data) ***REMOVED***
-        const ***REMOVED*** username, message ***REMOVED*** = data
+  onDiscordReady () {
+    this.handler.init(async (data: LogLine) => {
+      if (data) {
+        const { username, message } = data
         await this.discordClient.sendMessage(username, message)
-      ***REMOVED***
-    ***REMOVED***)
-  ***REMOVED***
+      }
+    })
+  }
 
-  async init () ***REMOVED***
+  async init () {
     const loaded = this.loadConfig()
     if (!loaded) return
 
@@ -46,7 +46,7 @@ class Shulker ***REMOVED***
     this.handler = new Handler(this.config)
 
     await this.discordClient.init()
-  ***REMOVED***
-***REMOVED***
+  }
+}
 
 export default Shulker

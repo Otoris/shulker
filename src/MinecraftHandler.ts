@@ -1,50 +1,50 @@
 import fs from "fs";
 import path from "path";
-import ***REMOVED*** Tail ***REMOVED*** from "tail";
+import { Tail } from "tail";
 import express from "express";
 
-import ***REMOVED*** Config ***REMOVED*** from "./Config";
+import { Config } from "./Config";
 
-export type LogLine = ***REMOVED***
+export type LogLine = {
   username: string;
   message: string;
-***REMOVED*** | null;
+} | null;
 
 type Callback = (data: LogLine) => void;
 
-class MinecraftHandler ***REMOVED***
+class MinecraftHandler {
   config: Config;
 
   app: express.Application;
   tail: Tail;
 
-  constructor(config: Config) ***REMOVED***
+  constructor(config: Config) {
     this.config = config;
-  ***REMOVED***
+  }
 
-  private static fixMinecraftUsername(username: string) ***REMOVED***
+  private static fixMinecraftUsername(username: string) {
     return username.replace(/(§[A-Z-a-z0-9])/g, "");
-  ***REMOVED***
+  }
 
-  public parseLogLine(data: string): LogLine ***REMOVED***
+  public parseLogLine(data: string): LogLine {
     const ignored = new RegExp(this.config.REGEX_IGNORED_CHAT);
 
-    if (ignored.test(data) || data.includes("Rcon connection")) ***REMOVED***
+    if (ignored.test(data) || data.includes("Rcon connection")) {
       if (this.config.DEBUG) console.log("[DEBUG] Line ignored");
       return null;
-    ***REMOVED***
+    }
 
     if (this.config.DEBUG) console.log("[DEBUG] Received " + data);
 
     const logLineDataRegex = new RegExp(
-      `$***REMOVED***this.config.REGEX_SERVER_PREFIX || "\\[Server thread/INFO\\]:"***REMOVED*** (.*)`
+      `${this.config.REGEX_SERVER_PREFIX || "\\[Server thread/INFO\\]:"} (.*)`
     );
 
     // get the part after the log prefix, so all the actual data is here
     const logLineData = data.match(logLineDataRegex);
 
-    if (!logLineDataRegex.test(data) || !logLineData) ***REMOVED***
-      if (this.config.DEBUG) ***REMOVED***
+    if (!logLineDataRegex.test(data) || !logLineData) {
+      if (this.config.DEBUG) {
         console.log("[DEBUG] Regex could not match the string:");
         console.log(
           'Received: "' +
@@ -53,141 +53,141 @@ class MinecraftHandler ***REMOVED***
             this.config.REGEX_SERVER_PREFIX +
             '"'
         );
-      ***REMOVED***
+      }
       return null;
-    ***REMOVED***
+    }
 
     const logLine = logLineData[2];
 
     // the username used for server messages
-    const serverUsername = `$***REMOVED***this.config.SERVER_NAME***REMOVED*** - Server`;
+    const serverUsername = `${this.config.SERVER_NAME} - Server`;
 
-    if (this.config.DEBUG) ***REMOVED***
+    if (this.config.DEBUG) {
       console.log("[DEBUG]: Parsing: ", logLine, " :or: ", logLineData);
-    ***REMOVED***
+    }
 
-    if (logLine.startsWith("<")) ***REMOVED***
-      if (this.config.DEBUG) ***REMOVED***
+    if (logLine.startsWith("<")) {
+      if (this.config.DEBUG) {
         console.log("[DEBUG]: A player sent a chat message");
-      ***REMOVED***
+      }
 
       const re = new RegExp(this.config.REGEX_MATCH_CHAT_MC);
       const matches = logLine.match(re);
 
-      if (!matches) ***REMOVED***
+      if (!matches) {
         console.log("[ERROR] Could not parse message: " + logLine);
         return null;
-      ***REMOVED***
+      }
 
       const username = MinecraftHandler.fixMinecraftUsername(matches[1]);
       const message = matches[2];
-      if (this.config.DEBUG) ***REMOVED***
+      if (this.config.DEBUG) {
         console.log("[DEBUG] Username: " + matches[1]);
         console.log("[DEBUG] Text: " + matches[2]);
-      ***REMOVED***
-      return ***REMOVED*** username, message ***REMOVED***;
-    ***REMOVED*** else if (
+      }
+      return { username, message };
+    } else if (
       this.config.SHOW_PLAYER_CONN_JOIN &&
       (logLine.includes("logged in") || logLine.includes("joined the game")) //joined the game (vanilla)
-    ) ***REMOVED***
+    ) {
       // handle disconnection etc.
-      if (this.config.DEBUG) ***REMOVED***
+      if (this.config.DEBUG) {
         console.log(`[DEBUG]: A player's connection status changed`);
-      ***REMOVED***
+      }
       const bukkitCheck = logLine.match(/.+?(?=\[\/)/);
-      if (bukkitCheck) ***REMOVED***
-        return ***REMOVED***
+      if (bukkitCheck) {
+        return {
           username: serverUsername,
-          message: `$***REMOVED***bukkitCheck[0]***REMOVED*** joined the game`,
-        ***REMOVED***;
-      ***REMOVED*** else ***REMOVED***
-        if (this.config.DEBUG) ***REMOVED***
-          console.log(`[DEBUG]:$***REMOVED***serverUsername***REMOVED*** $***REMOVED***logLine***REMOVED***`);
-        ***REMOVED***
-        return ***REMOVED*** username: serverUsername, message: logLine ***REMOVED***;
-      ***REMOVED***
-    ***REMOVED*** else if (
+          message: `${bukkitCheck[0]} joined the game`,
+        };
+      } else {
+        if (this.config.DEBUG) {
+          console.log(`[DEBUG]:${serverUsername} ${logLine}`);
+        }
+        return { username: serverUsername, message: logLine };
+      }
+    } else if (
       this.config.SHOW_PLAYER_CONN_LEAVE &&
       (logLine.includes("lost connection") || logLine.includes("left the game")) //left the game (vanilla)
-    ) ***REMOVED***
+    ) {
       // handle disconnection etc.
-      if (this.config.DEBUG) ***REMOVED***
+      if (this.config.DEBUG) {
         console.log("[DEBUG] A player disconnected");
-      ***REMOVED***
-      return ***REMOVED*** username: serverUsername, message: logLine ***REMOVED***;
-    ***REMOVED*** else if (
+      }
+      return { username: serverUsername, message: logLine };
+    } else if (
       this.config.SHOW_PLAYER_ADVANCEMENT &&
       logLine.includes("made the advancement")
-    ) ***REMOVED***
+    ) {
       // handle advancements
-      if (this.config.DEBUG) ***REMOVED***
-        console.log("[DEBUG] A player has made an advancement", ***REMOVED***
-          username: `$***REMOVED***this.config.SERVER_NAME***REMOVED*** - Server`,
+      if (this.config.DEBUG) {
+        console.log("[DEBUG] A player has made an advancement", {
+          username: `${this.config.SERVER_NAME} - Server`,
           message: logLine,
-        ***REMOVED***);
-      ***REMOVED***
-      return ***REMOVED***
-        username: `$***REMOVED***this.config.SERVER_NAME***REMOVED*** - Server`,
+        });
+      }
+      return {
+        username: `${this.config.SERVER_NAME} - Server`,
         message: logLine,
-      ***REMOVED***;
-    ***REMOVED*** else if (this.config.SHOW_PLAYER_ME && logLine.startsWith("* ")) ***REMOVED***
+      };
+    } else if (this.config.SHOW_PLAYER_ME && logLine.startsWith("* ")) {
       // /me commands have the bolded name and the action they did
-      const usernameMatch = data.match(/: \* ([a-zA-Z0-9_]***REMOVED***1,16***REMOVED***) (.*)/);
-      if (usernameMatch) ***REMOVED***
+      const usernameMatch = data.match(/: \* ([a-zA-Z0-9_]{1,16}) (.*)/);
+      if (usernameMatch) {
         const username = usernameMatch[1];
         const rest = usernameMatch[2];
-        return ***REMOVED*** username: serverUsername, message: `**$***REMOVED***username***REMOVED***** $***REMOVED***rest***REMOVED***` ***REMOVED***;
-      ***REMOVED***
-    ***REMOVED*** else if (this.config.SHOW_PLAYER_DEATH) ***REMOVED***
+        return { username: serverUsername, message: `**${username}** ${rest}` };
+      }
+    } else if (this.config.SHOW_PLAYER_DEATH) {
       const deathMessageRegex = new RegExp(
         this.config.REGEX_DEATH_MESSAGE ?? "^[\\w_]+ died"
       );
       const deathMessageMatch = logLine.match(deathMessageRegex);
 
-      if (deathMessageMatch) ***REMOVED***
-        if (this.config.DEBUG) ***REMOVED***
+      if (deathMessageMatch) {
+        if (this.config.DEBUG) {
           console.log(
-            `[DEBUG] A player died. Matched on "$***REMOVED***deathMessageMatch[1]***REMOVED***"`
+            `[DEBUG] A player died. Matched on "${deathMessageMatch[1]}"`
           );
-        ***REMOVED***
-        return ***REMOVED*** username: serverUsername, message: logLine ***REMOVED***;
-      ***REMOVED***
-    ***REMOVED***
+        }
+        return { username: serverUsername, message: logLine };
+      }
+    }
 
     return null;
-  ***REMOVED***
+  }
 
-  private initWebServer(callback: Callback) ***REMOVED***
+  private initWebServer(callback: Callback) {
     // init the webserver
     this.app = express();
 
-    this.app.use((request, response, next) => ***REMOVED***
+    this.app.use((request, response, next) => {
       request.rawBody = "";
       request.setEncoding("utf8");
 
-      request.on("data", (chunk: string) => ***REMOVED***
+      request.on("data", (chunk: string) => {
         request.rawBody += chunk;
-      ***REMOVED***);
+      });
 
-      request.on("end", function () ***REMOVED***
+      request.on("end", function () {
         next();
-      ***REMOVED***);
-    ***REMOVED***);
+      });
+    });
 
-    this.app.post(this.config.WEBHOOK, (req, res) => ***REMOVED***
-      if (req.rawBody) ***REMOVED***
+    this.app.post(this.config.WEBHOOK, (req, res) => {
+      if (req.rawBody) {
         const logLine = this.parseLogLine(req.rawBody);
         callback(logLine);
-      ***REMOVED***
-      res.json(***REMOVED*** received: true ***REMOVED***);
-    ***REMOVED***);
+      }
+      res.json({ received: true });
+    });
 
     const port: number = Number(process.env.PORT) || this.config.PORT;
 
-    this.app.listen(port, () => ***REMOVED***
+    this.app.listen(port, () => {
       console.log("[INFO] Bot listening on *:" + port);
 
-      if (!this.config.IS_LOCAL_FILE && this.config.SHOW_INIT_MESSAGE) ***REMOVED***
+      if (!this.config.IS_LOCAL_FILE && this.config.SHOW_INIT_MESSAGE) {
         // in case someone inputs the actual path and url in the config here...
         let mcPath: string =
           this.config.PATH_TO_MINECRAFT_SERVER_INSTALL ||
@@ -200,19 +200,19 @@ class MinecraftHandler ***REMOVED***
         console.log(
           "[INFO] Please enter the following command on your server running the Minecraft server:"
         );
-        if (defaultPath) ***REMOVED***
+        if (defaultPath) {
           console.log(
             '       Replace "PATH_TO_MINECRAFT_SERVER_INSTALL" with the path to your Minecraft server install' +
               (defaultUrl
                 ? ' and "YOUR_URL" with the URL/IP of the server running Shulker.'
                 : "")
           );
-        ***REMOVED*** else ***REMOVED***
+        } else {
           if (defaultUrl)
             console.log(
               '       Replace "YOUR_URL" with the URL/IP of the server running Shulker'
             );
-        ***REMOVED***
+        }
 
         mcPath =
           (defaultPath ? "/" : "") + path.join(mcPath, "/logs/latest.log");
@@ -224,51 +224,51 @@ class MinecraftHandler ***REMOVED***
           this.config.SHOW_PLAYER_ADVANCEMENT ||
           this.config.SHOW_PLAYER_CONN_JOIN ||
           this.config.SHOW_PLAYER_CONN_LEAVE
-        ) ***REMOVED***
+        ) {
           grepMatch = this.config.REGEX_SERVER_PREFIX;
-        ***REMOVED***
+        }
         console.log(
-          `  \`tail -F $***REMOVED***mcPath***REMOVED*** | grep --line-buffered "$***REMOVED***grepMatch***REMOVED***" | while read x ; do echo -ne $x | curl -X POST -d @- http://$***REMOVED***url***REMOVED***:$***REMOVED***port***REMOVED***$***REMOVED***this.config.WEBHOOK***REMOVED*** ; done\``
+          `  \`tail -F ${mcPath} | grep --line-buffered "${grepMatch}" | while read x ; do echo -ne $x | curl -X POST -d @- http://${url}:${port}${this.config.WEBHOOK} ; done\``
         );
-        if (grepMatch !== ": <") ***REMOVED***
+        if (grepMatch !== ": <") {
           console.log(
             '       Please note that the above command can send a lot of requests to the server. Disable the non-text messages (such as "SHOW_PLAYER_CONN_STAT") to reduce this if necessary.'
           );
-        ***REMOVED***
-      ***REMOVED***
-    ***REMOVED***);
-  ***REMOVED***
+        }
+      }
+    });
+  }
 
-  private initTail(callback: Callback) ***REMOVED***
-    if (fs.existsSync(this.config.LOCAL_FILE_PATH)) ***REMOVED***
+  private initTail(callback: Callback) {
+    if (fs.existsSync(this.config.LOCAL_FILE_PATH)) {
       console.log(
-        `[INFO] Using configuration for local log file at "$***REMOVED***this.config.LOCAL_FILE_PATH***REMOVED***"`
+        `[INFO] Using configuration for local log file at "${this.config.LOCAL_FILE_PATH}"`
       );
-      this.tail = new Tail(this.config.LOCAL_FILE_PATH, ***REMOVED*** useWatchFile: true ***REMOVED***);
-    ***REMOVED*** else ***REMOVED***
+      this.tail = new Tail(this.config.LOCAL_FILE_PATH, { useWatchFile: true });
+    } else {
       throw new Error(
-        `[ERROR] Local log file not found at "$***REMOVED***this.config.LOCAL_FILE_PATH***REMOVED***"`
+        `[ERROR] Local log file not found at "${this.config.LOCAL_FILE_PATH}"`
       );
-    ***REMOVED***
-    this.tail.on("line", (data: string) => ***REMOVED***
+    }
+    this.tail.on("line", (data: string) => {
       // Parse the line to see if we care about it
       let logLine = this.parseLogLine(data);
-      if (data) ***REMOVED***
+      if (data) {
         callback(logLine);
-      ***REMOVED***
-    ***REMOVED***);
-    this.tail.on("error", (error: any) => ***REMOVED***
+      }
+    });
+    this.tail.on("error", (error: any) => {
       console.log("[ERROR] Error tailing log file: " + error);
-    ***REMOVED***);
-  ***REMOVED***
+    });
+  }
 
-  public init(callback: Callback) ***REMOVED***
-    if (this.config.IS_LOCAL_FILE) ***REMOVED***
+  public init(callback: Callback) {
+    if (this.config.IS_LOCAL_FILE) {
       this.initTail(callback);
-    ***REMOVED*** else ***REMOVED***
+    } else {
       this.initWebServer(callback);
-    ***REMOVED***
-  ***REMOVED***
-***REMOVED***
+    }
+  }
+}
 
 export default MinecraftHandler;

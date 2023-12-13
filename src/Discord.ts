@@ -1,19 +1,19 @@
-import ***REMOVED***Client, Message, Snowflake, TextChannel***REMOVED*** from 'discord.js'
+import {Client, Message, Snowflake, TextChannel} from 'discord.js'
 
 import emojiStrip from 'emoji-strip'
 import axios from 'axios'
 
-import ***REMOVED*** Config ***REMOVED*** from './Config'
+import { Config } from './Config'
 
 import Rcon from './Rcon'
 
-class Discord ***REMOVED***
+class Discord {
   config: Config
   client: Client
 
   channel: Snowflake
 
-  constructor (config: Config, onReady?: () => void) ***REMOVED***
+  constructor (config: Config, onReady?: () => void) {
     this.config = config
 
     this.client = new Client()
@@ -21,204 +21,204 @@ class Discord ***REMOVED***
     this.client.on('message', (message: Message) => this.onMessage(message))
 
     this.channel = config.DISCORD_CHANNEL_ID || ''
-  ***REMOVED***
+  }
 
-  public async init () ***REMOVED***
-    try ***REMOVED***
+  public async init () {
+    try {
       await this.client.login(this.config.DISCORD_TOKEN)
       if (this.config.DISCORD_CHANNEL_NAME && !this.config.DISCORD_CHANNEL_ID)
         this.getChannelIdFromName(this.config.DISCORD_CHANNEL_NAME)
-    ***REMOVED*** catch (e) ***REMOVED***
+    } catch (e) {
       console.log('[ERROR] Could not authenticate with Discord: ' + e)
       if (this.config.DEBUG) console.error(e)
-    ***REMOVED***
-  ***REMOVED***
+    }
+  }
 
-  private getChannelIdFromName (name: string) ***REMOVED***
+  private getChannelIdFromName (name: string) {
     // remove the # if there is one
     if (name.startsWith('#')) name = name.substring(1, name.length)
     // @ts-ignore
     const channel: TextChannel = this.client.channels.find((c: TextChannel) => c.type === 'text' && c.name === name && !c.deleted)
-    if (channel) ***REMOVED***
+    if (channel) {
       this.channel = channel.id
-      console.log(`[INFO] Found channel #$***REMOVED***channel.name***REMOVED*** (id: $***REMOVED***channel.id***REMOVED***) in the server "$***REMOVED***channel.guild.name***REMOVED***"`)
-    ***REMOVED*** else ***REMOVED***
-      console.log(`[INFO] Could not find channel $***REMOVED***name***REMOVED***! Check that the name is correct or use the ID of the channel instead (DISCORD_CHANNEL_ID)!`)
+      console.log(`[INFO] Found channel #${channel.name} (id: ${channel.id}) in the server "${channel.guild.name}"`)
+    } else {
+      console.log(`[INFO] Could not find channel ${name}! Check that the name is correct or use the ID of the channel instead (DISCORD_CHANNEL_ID)!`)
       process.exit(1)
-    ***REMOVED***
-  ***REMOVED***
+    }
+  }
 
-  private parseDiscordWebhook (url: string) ***REMOVED***
+  private parseDiscordWebhook (url: string) {
     const re = /discordapp.com\/api\/webhooks\/([^\/]+)\/([^\/]+)/
 
     // the is of the webhook
     let id = null
     let token = null
 
-    if (!re.test(url)) ***REMOVED***
+    if (!re.test(url)) {
       // In case the url changes at some point, I will warn if it still works
       console.log('[WARN] The Webhook URL may not be valid!')
-    ***REMOVED*** else ***REMOVED***
+    } else {
       const match = url.match(re)
-      if (match) ***REMOVED***
+      if (match) {
         id = match[1]
         token = match[2]
-      ***REMOVED***
-    ***REMOVED***
+      }
+    }
 
-    return ***REMOVED*** id, token ***REMOVED***
-  ***REMOVED***
+    return { id, token }
+  }
 
-  private async onMessage (message: Message) ***REMOVED***
+  private async onMessage (message: Message) {
     // no channel, done
     if (!this.channel) return
     // don't want to check other channels
     if (message.channel.id !== this.channel || message.channel.type !== 'text') return
     // if using webhooks, ignore this!
-    if (message.webhookID) ***REMOVED***
+    if (message.webhookID) {
       // backwards compatability with older config
       if (this.config.USE_WEBHOOKS && this.config.IGNORE_WEBHOOKS === undefined) return
 
       // if ignoring all webhooks, ignore
-      if (this.config.IGNORE_WEBHOOKS) ***REMOVED***
+      if (this.config.IGNORE_WEBHOOKS) {
         return
-      ***REMOVED*** else if (this.config.USE_WEBHOOKS) ***REMOVED***
+      } else if (this.config.USE_WEBHOOKS) {
         // otherwise, ignore all webhooks that are not the same as this one
-        const ***REMOVED*** id ***REMOVED*** = this.parseDiscordWebhook(this.config.WEBHOOK_URL)
-        if (id === message.webhookID) ***REMOVED***
+        const { id } = this.parseDiscordWebhook(this.config.WEBHOOK_URL)
+        if (id === message.webhookID) {
           if (this.config.DEBUG) console.log('[INFO] Ignoring webhook from self')
           return
-        ***REMOVED***
-      ***REMOVED***
-    ***REMOVED***
+        }
+      }
+    }
     // if the same user as the bot, ignore
     if (message.author.id === this.client?.user?.id) return
     // ignore any attachments
     if (message.attachments.array().length) return
 
     const rcon = new Rcon(this.config.MINECRAFT_SERVER_RCON_IP, this.config.MINECRAFT_SERVER_RCON_PORT, this.config.DEBUG)
-    try ***REMOVED***
+    try {
       await rcon.auth(this.config.MINECRAFT_SERVER_RCON_PASSWORD)
-    ***REMOVED*** catch (e) ***REMOVED***
+    } catch (e) {
       console.log('[ERROR] Could not auth with the server!')
       if (this.config.DEBUG) console.error(e)
-    ***REMOVED***
+    }
 
     let command = ''
-    if (this.config.ALLOW_SLASH_COMMANDS && this.config.SLASH_COMMAND_ROLES && message.cleanContent.startsWith('/')) ***REMOVED***
+    if (this.config.ALLOW_SLASH_COMMANDS && this.config.SLASH_COMMAND_ROLES && message.cleanContent.startsWith('/')) {
       const author = message.member
-      if (author?.roles.cache.find(r => this.config.SLASH_COMMAND_ROLES.includes(r.name))) ***REMOVED***
+      if (author?.roles.cache.find(r => this.config.SLASH_COMMAND_ROLES.includes(r.name))) {
         // send the raw command, can be dangerous...
         command = message.cleanContent
-      ***REMOVED*** else ***REMOVED***
+      } else {
         console.log('[INFO] User attempted a slash command without a role')
-      ***REMOVED***
-    ***REMOVED*** else ***REMOVED***
-      command = `tellraw @a $***REMOVED***this.makeMinecraftTellraw(message)***REMOVED***`
-    ***REMOVED***
+      }
+    } else {
+      command = `tellraw @a ${this.makeMinecraftTellraw(message)}`
+    }
 
-    if (this.config.DEBUG) console.log(`[DEBUG] Sending command "$***REMOVED***command***REMOVED***" to the server`)
+    if (this.config.DEBUG) console.log(`[DEBUG] Sending command "${command}" to the server`)
 
-    if (command) ***REMOVED***
-      await rcon.command(command).catch((e) => ***REMOVED***
+    if (command) {
+      await rcon.command(command).catch((e) => {
         console.log('[ERROR] Could not send command!')
         if (this.config.DEBUG) console.error(e)
-      ***REMOVED***)
-    ***REMOVED***
+      })
+    }
     rcon.close()
-  ***REMOVED***
+  }
 
-  private makeMinecraftTellraw(message: Message): string ***REMOVED***
-    const variables: ***REMOVED***[index: string]: string***REMOVED*** = ***REMOVED***
+  private makeMinecraftTellraw(message: Message): string {
+    const variables: {[index: string]: string} = {
       username: emojiStrip(message.author.username),
       nickname: message?.member?.nickname ? emojiStrip(message.member.nickname) : emojiStrip(message.author.username),
       discriminator: message.author.discriminator,
       text: emojiStrip(message.cleanContent)
-    ***REMOVED***
+    }
     // hastily use JSON to encode the strings
-    for (const v of Object.keys(variables)) ***REMOVED***
+    for (const v of Object.keys(variables)) {
       variables[v] = JSON.stringify(variables[v]).slice(1,-1)
-    ***REMOVED***
+    }
 
     return this.config.MINECRAFT_TELLRAW_TEMPLATE
       .replace(/%username%/g, variables.username)
       .replace(/%nickname%/g, variables.nickname)
       .replace(/%discriminator%/g, variables.discriminator)
       .replace(/%message%/g, variables.text)
-  ***REMOVED***
+  }
 
-  private replaceDiscordMentions(message: string): string ***REMOVED***
-    const possibleMentions = message.match(/@[^#\s]*[#]?[0-9]***REMOVED***4***REMOVED***/gim)
-    if (possibleMentions) ***REMOVED***
-      for (let mention of possibleMentions) ***REMOVED***
+  private replaceDiscordMentions(message: string): string {
+    const possibleMentions = message.match(/@[^#\s]*[#]?[0-9]{4}/gim)
+    if (possibleMentions) {
+      for (let mention of possibleMentions) {
         const mentionParts = mention.split('#')
         let username = mentionParts[0].replace('@', '')
-        if (mentionParts.length > 1) ***REMOVED***
-          if (this.config.ALLOW_USER_MENTIONS) ***REMOVED***
+        if (mentionParts.length > 1) {
+          if (this.config.ALLOW_USER_MENTIONS) {
             const user = this.client.users.cache.find(user => user.username === username && user.discriminator === mentionParts[1])
-            if (user) ***REMOVED***
+            if (user) {
               message = message.replace(mention, '<@' + user.id + '>')
-            ***REMOVED***
-          ***REMOVED***
-        ***REMOVED***
+            }
+          }
+        }
 
-        if (['here', 'everyone'].includes(username)) ***REMOVED***
+        if (['here', 'everyone'].includes(username)) {
           // remove these large pings
-          if (!this.config.ALLOW_HERE_EVERYONE_MENTIONS) ***REMOVED***
+          if (!this.config.ALLOW_HERE_EVERYONE_MENTIONS) {
             message = message
               .replace('@everyone', '@ everyone')
               .replace('@here', '@ here')
-          ***REMOVED***
-        ***REMOVED***
-      ***REMOVED***
-    ***REMOVED***
+          }
+        }
+      }
+    }
     return message
-  ***REMOVED***
+  }
 
-  private makeDiscordWebhook (username: string, message: string) ***REMOVED***
+  private makeDiscordWebhook (username: string, message: string) {
     message = this.replaceDiscordMentions(message)
 
     let avatarURL
-    if (username === this.config.SERVER_NAME + ' - Server') ***REMOVED*** // use avatar for the server
+    if (username === this.config.SERVER_NAME + ' - Server') { // use avatar for the server
       avatarURL = this.config.SERVER_IMAGE || 'https://minotar.net/helm/Steve/256.png'
-    ***REMOVED*** else ***REMOVED*** // use avatar for player
-      avatarURL = `https://minotar.net/helm/$***REMOVED***username***REMOVED***/256.png`
-    ***REMOVED***
+    } else { // use avatar for player
+      avatarURL = `https://minotar.net/helm/${username}/256.png`
+    }
 
-    return ***REMOVED***
+    return {
       username: username,
       content: message,
       'avatar_url': avatarURL,
-    ***REMOVED***
-  ***REMOVED***
+    }
+  }
 
-  private makeDiscordMessage(username: string, message: string) ***REMOVED***
+  private makeDiscordMessage(username: string, message: string) {
     message = this.replaceDiscordMentions(message)
 
     return this.config.DISCORD_MESSAGE_TEMPLATE
       .replace('%username%', username)
       .replace('%message%', message)
-  ***REMOVED***
+  }
 
-  public async sendMessage (username: string, message: string) ***REMOVED***
-    if (this.config.USE_WEBHOOKS) ***REMOVED***
+  public async sendMessage (username: string, message: string) {
+    if (this.config.USE_WEBHOOKS) {
       const webhook = this.makeDiscordWebhook(username, message)
-      try ***REMOVED***
-        await axios.post(this.config.WEBHOOK_URL, webhook, ***REMOVED*** headers: ***REMOVED*** 'Content-Type': 'application/json' ***REMOVED*** ***REMOVED***)
-      ***REMOVED*** catch (e) ***REMOVED***
+      try {
+        await axios.post(this.config.WEBHOOK_URL, webhook, { headers: { 'Content-Type': 'application/json' } })
+      } catch (e) {
         console.log('[ERROR] Could not send Discord message through WebHook!')
         if (this.config.DEBUG) console.log(e)
-      ***REMOVED***
-    ***REMOVED*** else ***REMOVED***
+      }
+    } else {
       // find the channel
       const channel = this.client.channels.cache.find((ch) => ch.id === this.config.DISCORD_CHANNEL_ID && ch.type === 'text') as TextChannel
-      if (channel) ***REMOVED***
+      if (channel) {
         await channel.send(this.makeDiscordMessage(username, message))
-      ***REMOVED*** else ***REMOVED***
-        console.log(`[ERROR] Could not find channel with ID $***REMOVED***this.config.DISCORD_CHANNEL_ID***REMOVED***!`)
-      ***REMOVED***
-    ***REMOVED***
-  ***REMOVED***
-***REMOVED***
+      } else {
+        console.log(`[ERROR] Could not find channel with ID ${this.config.DISCORD_CHANNEL_ID}!`)
+      }
+    }
+  }
+}
 
 export default Discord

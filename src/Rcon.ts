@@ -2,7 +2,7 @@
 
 import net from 'net'
 
-class Rcon ***REMOVED***
+class Rcon {
   socket: net.Socket
   timeout: number
   nextId: number
@@ -14,9 +14,9 @@ class Rcon ***REMOVED***
   ip: string
   port: number
 
-  packages: ***REMOVED*** [key: number]: (type: number, response: string) => void ***REMOVED***
+  packages: { [key: number]: (type: number, response: string) => void }
 
-  constructor (ip: string, port: number, debug: boolean) ***REMOVED***
+  constructor (ip: string, port: number, debug: boolean) {
     this.ip = ip
     this.port = port
     this.debug = debug
@@ -27,68 +27,68 @@ class Rcon ***REMOVED***
     this.authed = false
     this.packages = []
 
-    this.socket = net.connect(port, ip, () => ***REMOVED***
+    this.socket = net.connect(port, ip, () => {
       this.connected = true
       console.log('[INFO] Authenticated with ' + ip + ':' + port)
-    ***REMOVED***)
+    })
 
-    this.socket.on('data', (data: Buffer) => ***REMOVED***
+    this.socket.on('data', (data: Buffer) => {
       const id = data.readInt32LE(4)
       const type = data.readInt32LE(8)
       const response = data.toString('ascii', 12, data.length - 2)
 
-      if (this.packages[id]) ***REMOVED***
+      if (this.packages[id]) {
         this.packages[id](type, response)
-      ***REMOVED*** else ***REMOVED***
+      } else {
         console.log('Unexpected rcon response', id, type, response)
-      ***REMOVED***
-    ***REMOVED***).on('end', () => ***REMOVED***
-      if (debug) ***REMOVED***
+      }
+    }).on('end', () => {
+      if (debug) {
         console.log('[DEBUG] Rcon closed!')
-      ***REMOVED***
-    ***REMOVED***)
-  ***REMOVED***
+      }
+    })
+  }
 
-  public close () ***REMOVED***
+  public close () {
     this.connected = false
     this.socket.end()
-  ***REMOVED***
+  }
 
-  public async auth (password: string): Promise<void> ***REMOVED***
-    if (this.authed) ***REMOVED*** throw new Error('Already authed') ***REMOVED***
+  public async auth (password: string): Promise<void> {
+    if (this.authed) { throw new Error('Already authed') }
 
-    if (this.connected)***REMOVED***
-      try ***REMOVED***
+    if (this.connected){
+      try {
         await this.sendPackage(3, password)
-      ***REMOVED*** catch (e) ***REMOVED***
+      } catch (e) {
         console.log('[ERROR] Could not send password to Rcon server!')
         if (this.debug) console.error(e)
-      ***REMOVED***
-    ***REMOVED*** else ***REMOVED***
-      return new Promise((resolve, reject) => ***REMOVED***
-        this.socket.on('connect', async () => ***REMOVED***
-          try ***REMOVED***
+      }
+    } else {
+      return new Promise((resolve, reject) => {
+        this.socket.on('connect', async () => {
+          try {
             await this.sendPackage(3, password)
             resolve()
-          ***REMOVED*** catch (e) ***REMOVED***
+          } catch (e) {
             console.log('[ERROR] Could not send password to Rcon server!')
             if (this.debug) console.error(e)
             reject(e)
-          ***REMOVED***
-        ***REMOVED***)
-      ***REMOVED***)
-    ***REMOVED***
-  ***REMOVED***
+          }
+        })
+      })
+    }
+  }
 
-  public command (cmd: string): Promise<string> ***REMOVED***
+  public command (cmd: string): Promise<string> {
     return this.sendPackage(2, cmd)
-  ***REMOVED***
+  }
 
-  public sendPackage (type: number, payload: string): Promise<string> ***REMOVED***
+  public sendPackage (type: number, payload: string): Promise<string> {
     const id = this.nextId
     this.nextId++
 
-    if (!this.connected) ***REMOVED*** throw new Error('Cannot send package while not connected') ***REMOVED***
+    if (!this.connected) { throw new Error('Cannot send package while not connected') }
 
     const length = 14 + payload.length
     const buff = Buffer.alloc(length)
@@ -102,23 +102,23 @@ class Rcon ***REMOVED***
 
     this.socket.write(buff)
 
-    return new Promise((resolve, reject) => ***REMOVED***
-      const timeout = setTimeout(() => ***REMOVED***
+    return new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
         delete this.packages[id]
         return reject('Server sent no request in ' + this.timeout / 1000 + ' seconds')
-      ***REMOVED***, this.timeout)
+      }, this.timeout)
 
-      this.packages[id] = (type: number, response: string) => ***REMOVED***
+      this.packages[id] = (type: number, response: string) => {
         clearTimeout(timeout)
         const err = type >= 0 ? false : 'Server sent package code ' + type
-        if (this.debug) ***REMOVED***
+        if (this.debug) {
           console.log('[DEBUG] Received response: ' + response)
-        ***REMOVED***
+        }
         if (err) return reject(err)
         return resolve(response)
-      ***REMOVED***
-    ***REMOVED***)
-  ***REMOVED***
-***REMOVED***
+      }
+    })
+  }
+}
 
 export default Rcon

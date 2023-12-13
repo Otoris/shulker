@@ -1,4 +1,4 @@
-***REMOVED***
+{
   "PORT": 8000,
   "USE_WEBHOOKS": true,
   "WEBHOOK_URL": "",
@@ -10,7 +10,7 @@
   "MINECRAFT_SERVER_RCON_IP": "",
   "MINECRAFT_SERVER_RCON_PORT": 25575,
   "MINECRAFT_SERVER_RCON_PASSWORD": "",
-  "MINECRAFT_TELLRAW_TEMPLATE": "[***REMOVED***\"color\": \"#DF00FE\", \"text\": \"<%username%> %message%\"***REMOVED***]",
+  "MINECRAFT_TELLRAW_TEMPLATE": "[{\"color\": \"#DF00FE\", \"text\": \"<%username%> %message%\"}]",
   "IS_LOCAL_FILE": false,
   "LOCAL_FILE_PATH": "/usr/home/minecraft_server/logs/latest.log",
   "SHOW_INIT_MESSAGE": true,
@@ -63,4 +63,4 @@
     "kinetic",
     "froze"
   ]
-***REMOVED***
+}

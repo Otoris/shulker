@@ -1,4 +1,4 @@
-export interface Config ***REMOVED***
+export interface Config {
   PORT: number
 
   USE_WEBHOOKS: boolean
@@ -42,4 +42,4 @@ export interface Config ***REMOVED***
   SHOW_PLAYER_DEATH: boolean
   SHOW_PLAYER_ME: boolean
   DEATH_KEY_WORDS: string[]
-***REMOVED***
+}
