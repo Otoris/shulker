@@ -4,12 +4,13 @@ import ***REMOVED*** Config ***REMOVED*** from "./Config";
 
 describe("MinecraftHandler", () => ***REMOVED***
   let minecraftHandler: MinecraftHandler;
-    let config: Config;
+  let config: Config;
   beforeEach(async () => ***REMOVED***
     const configFile =
-      process.argv.length > 2 ? process.argv[2] : "../config.json";
+      process.argv.length > 2 ? process.argv[2] : "../config.example.json";
     console.log("[INFO] Using configuration file:", configFile);
     config = require(configFile);
+    config.SHOW_PLAYER_ADVANCEMENT = true;
 
     minecraftHandler = new MinecraftHandler(config);
   ***REMOVED***);
@@ -53,6 +54,30 @@ describe("MinecraftHandler", () => ***REMOVED***
       ***REMOVED***);
     ***REMOVED***);
 
-    // Add more test cases as needed
+    it("should correctly parse a player advancement log line", () => ***REMOVED***
+      const logLine =
+        "[10:40:34] [Server thread/INFO]: Otoris has made the advancement [Monster Hunter]";
+      const result = minecraftHandler.parseLogLine(logLine);
+      expect(result).toEqual(***REMOVED***
+        username: `$***REMOVED***config.SERVER_NAME***REMOVED*** - Server`,
+        message: "Otoris has made the advancement [Monster Hunter]",
+      ***REMOVED***);
+    ***REMOVED***);
+
+    it("should correctly parse a /me command log line", () => ***REMOVED***
+      const logLine = "[23:39:37] [Server thread/INFO]: * Otoris waves hello";
+      const result = minecraftHandler.parseLogLine(logLine);
+      expect(result).toEqual(***REMOVED***
+        username: `$***REMOVED***config.SERVER_NAME***REMOVED*** - Server`,
+        message: "**Otoris** waves hello",
+      ***REMOVED***);
+    ***REMOVED***);
+
+    it("should return null for ignored log lines", () => ***REMOVED***
+      const logLine =
+        "[23:39:37] [Server thread/INFO]: Rcon connection from: /127.0.0.1";
+      const result = minecraftHandler.parseLogLine(logLine);
+      expect(result).toBeNull();
+    ***REMOVED***);
   ***REMOVED***);
 ***REMOVED***);

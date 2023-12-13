@@ -121,7 +121,10 @@ class MinecraftHandler ***REMOVED***
     ) ***REMOVED***
       // handle advancements
       if (this.config.DEBUG) ***REMOVED***
-        console.log("[DEBUG] A player has made an advancement");
+        console.log("[DEBUG] A player has made an advancement", ***REMOVED***
+          username: `$***REMOVED***this.config.SERVER_NAME***REMOVED*** - Server`,
+          message: logLine,
+        ***REMOVED***);
       ***REMOVED***
       return ***REMOVED***
         username: `$***REMOVED***this.config.SERVER_NAME***REMOVED*** - Server`,
