@@ -37,6 +37,27 @@ $ yarn
 $ yarn build && yarn start
 ```
 
+Or using Docker:
+```sh
+docker build -t shulker .
+docker run -d -v /path/to/config.json:/usr/src/app/config.json shulker
+```
+
+If you need to read from another docker on your server, first create a shared network for the containers to communicate on:
+```sh
+docker network create minecraft
+```
+
+Then, start your Minecraft server with the following options:
+```sh
+docker run -d -v /path/to/config.json:/usr/src/app/config.json --network="container:minecraft" shulker
+```
+
+Additionally, you will likely need to link your Minecraft server log folder to the shulker docker:
+```sh
+docker run -d -v /path/to/config.json:/usr/src/app/config.json -v /path/to/minecraft/logs:/usr/src/app/logs --network="container:minecraft" shulker
+```
+
 If you are running this on the same server as the MC server, enable the `IS_LOCAL_FILE` flag and update related options below.
 Otherwise, perform the following command on the server hosting (in a screen/tmux session or background process, make sure to replace your `YOUR_URL` with whatever URL you're using (`localhost:8000` if running on the same server and default config) and `PATH_TO_MINECRAFT_SERVER_INSTALL` with the path to the Minecraft server installation, such as `/usr/home/minecraft_server/`):
 
