@@ -4,7 +4,7 @@
   "description": "A Discord to Minecraft Chat Gateway",
   "main": "build/index.js",
   "engines": {
-    "node": "v15.13.0"
+    "node": "v20.10.0"
   },
   "scripts": {
     "start": "node build/index.js",

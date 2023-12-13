@@ -1,5 +1,5 @@
-# Use Node.js v16 as the base image
-FROM node:18
+# Use Node.js v20 as the base image
+FROM node:20
 
 # Set the working directory in the container
 WORKDIR /mnt/user/Minecraft/shulker
