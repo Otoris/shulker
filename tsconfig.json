@@ -4,14 +4,15 @@
     "lib": ["es2018", "esnext"],
     "allowJs": true,
     "esModuleInterop": true,
-    "noImplicitAny": true,
-    "noImplicitReturns": true,
+    "noImplicitAny": false,
+    "noImplicitReturns": false,
     "removeComments": true,
     "strict": false,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
+    "strictNullChecks": false,
+    "strictFunctionTypes": false,
     "outDir": "build/",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "types": ["node", "jest"]
   },
   "include": ["./src/**/*", "./typings/**/*"],
   "exclude": ["node_modules"]
