@@ -12,7 +12,8 @@
     "strictFunctionTypes": false,
     "outDir": "build/",
     "moduleResolution": "node",
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "skipLibCheck": true
   },
   "include": ["./src/**/*", "./typings/**/*"],
   "exclude": ["node_modules"]
