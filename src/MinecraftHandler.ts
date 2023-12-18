@@ -88,7 +88,7 @@ class MinecraftHandler {
       return { username, message };
     } else if (
       this.config.SHOW_PLAYER_CONN_JOIN &&
-      (logLine.includes("logged in") || logLine.includes("joined the game")) //joined the game (vanilla)
+      logLine.includes("joined the game") //joined the game (vanilla)
     ) {
       // handle disconnection etc.
       if (this.config.DEBUG) {
@@ -108,7 +108,7 @@ class MinecraftHandler {
       }
     } else if (
       this.config.SHOW_PLAYER_CONN_LEAVE &&
-      (logLine.includes("lost connection") || logLine.includes("left the game")) //left the game (vanilla)
+      logLine.includes("left the game") //left the game (vanilla)
     ) {
       // handle disconnection etc.
       if (this.config.DEBUG) {

@@ -27,7 +27,7 @@ describe("MinecraftHandler", () => {
     });
 
     it("should correctly parse a player join log line", () => {
-      const logLine = "[23:34:38] [Server thread/INFO]: Otoris joined the game";
+      const logLine = "[00:46:22] [Server thread/INFO]: Otoris joined the game";
       const result = minecraftHandler.parseLogLine(logLine);
       expect(result).toEqual({
         username: `${config.SERVER_NAME} - Server`,
