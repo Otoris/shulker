@@ -26,15 +26,105 @@ class MinecraftHandler {
     return username.replace(/(§[A-Z-a-z0-9])/g, "");
   }
 
-  public parseLogLine(data: string): LogLine {
+  private isIgnoredLine(data: string): boolean {
     const ignored = new RegExp(this.config.REGEX_IGNORED_CHAT);
+    return ignored.test(data) || data.includes("Rcon connection");
+  }
 
-    if (ignored.test(data) || data.includes("Rcon connection")) {
-      if (this.config.DEBUG) console.log("[DEBUG] Line ignored");
+  private logDebug(message: string, data?: any) {
+    if (this.config.DEBUG) {
+      console.log(`[DEBUG] ${message}`, data);
+    }
+  }
+
+  private logError(message: string, data?: any) {
+    console.log(`[ERROR] ${message}`, data);
+  }
+
+  private createLogLine(username: string, message: string): LogLine {
+    return { username, message };
+  }
+
+  private handlePlayerChat(logLine: string): LogLine | null {
+    this.logDebug("A player sent a chat message");
+
+    const re = new RegExp(this.config.REGEX_MATCH_CHAT_MC);
+    const matches = logLine.match(re);
+
+    if (!matches) {
+      this.logError("Could not parse message: " + logLine);
       return null;
     }
 
-    if (this.config.DEBUG) console.log("[DEBUG] Received " + data);
+    const username = MinecraftHandler.fixMinecraftUsername(matches[1]);
+    const message = matches[2];
+    this.logDebug("Username: " + matches[1]);
+    this.logDebug("Text: " + matches[2]);
+    return this.createLogLine(username, message);
+  }
+
+  private handlePlayerJoin(logLine: string, serverUsername: string): LogLine | null {
+    this.logDebug("A player's connection status changed");
+
+    const bukkitCheck = logLine.match(/.+?(?=\[\/)/);
+    if (bukkitCheck) {
+      return {
+        username: serverUsername,
+        message: `${bukkitCheck[0]} joined the game`,
+      };
+    } else {
+      this.logDebug(`${serverUsername} ${logLine}`);
+      return { username: serverUsername, message: logLine };
+    }
+  }
+
+  private handlePlayerLeave(logLine: string, serverUsername: string): LogLine | null {
+    this.logDebug("A player disconnected");
+    return { username: serverUsername, message: logLine };
+  }
+
+  private handlePlayerAdvancement(logLine: string, serverUsername: string): LogLine | null {
+    this.logDebug("A player has made an advancement", {
+      username: `${this.config.SERVER_NAME} - Server`,
+      message: logLine,
+    });
+    return {
+      username: `${this.config.SERVER_NAME} - Server`,
+      message: logLine,
+    };
+  }
+
+  private handlePlayerMe(logLine: string, serverUsername: string): LogLine | null {
+    // /me commands have the bolded name and the action they did
+    const usernameMatch = logLine.match(/^\* ([a-zA-Z0-9_]{1,16}) (.*)/);
+    if (usernameMatch) {
+      const username = usernameMatch[1];
+      const rest = usernameMatch[2];
+      return { username: serverUsername, message: `**${username}** ${rest}` };
+    }
+    return null;
+  }
+
+  private handlePlayerDeath(logLine: string, serverUsername: string): LogLine | null {
+    const deathMessageRegex = new RegExp(
+      this.config.REGEX_DEATH_MESSAGE ?? "^[\\w_]+ died"
+    );
+    const deathMessageMatch = logLine.match(deathMessageRegex);
+
+    if (deathMessageMatch) {
+      this.logDebug(`A player died. Matched on "${deathMessageMatch[1]}"`);
+      return { username: serverUsername, message: logLine };
+    }
+    return null;
+  }
+
+  public parseLogLine(data: string): LogLine {
+    if (this.isIgnoredLine(data)) {
+      this.logDebug("Line ignored");
+      return null;
+    }
+
+    this.logDebug("Received " + data);
 
     const logLineDataRegex = new RegExp(
       `${this.config.REGEX_SERVER_PREFIX || "\\[Server thread/INFO\\]:"} (.*)`
@@ -44,16 +134,14 @@ class MinecraftHandler {
     const logLineData = data.match(logLineDataRegex);
 
     if (!logLineDataRegex.test(data) || !logLineData) {
-      if (this.config.DEBUG) {
-        console.log("[DEBUG] Regex could not match the string:");
-        console.log(
-          'Received: "' +
-            data +
-            '", Regex matches lines that start with: "' +
-            this.config.REGEX_SERVER_PREFIX +
-            '"'
-        );
-      }
+      this.logDebug("Regex could not match the string:");
+      this.logDebug(
+        'Received: "' +
+          data +
+          '", Regex matches lines that start with: "' +
+          this.config.REGEX_SERVER_PREFIX +
+          '"'
+      );
       return null;
     }
 
@@ -62,96 +150,29 @@ class MinecraftHandler {
     // the username used for server messages
     const serverUsername = `${this.config.SERVER_NAME} - Server`;
 
-    if (this.config.DEBUG) {
-      console.log("[DEBUG]: Parsing: ", logLine, " :or: ", logLineData);
-    }
+    this.logDebug("Parsing: " + logLine + " :or: " + logLineData);
 
     if (logLine.startsWith("<")) {
-      if (this.config.DEBUG) {
-        console.log("[DEBUG]: A player sent a chat message");
-      }
-
-      const re = new RegExp(this.config.REGEX_MATCH_CHAT_MC);
-      const matches = logLine.match(re);
-
-      if (!matches) {
-        console.log("[ERROR] Could not parse message: " + logLine);
-        return null;
-      }
-
-      const username = MinecraftHandler.fixMinecraftUsername(matches[1]);
-      const message = matches[2];
-      if (this.config.DEBUG) {
-        console.log("[DEBUG] Username: " + matches[1]);
-        console.log("[DEBUG] Text: " + matches[2]);
-      }
-      return { username, message };
+      return this.handlePlayerChat(logLine);
     } else if (
       this.config.SHOW_PLAYER_CONN_JOIN &&
       logLine.includes("joined the game") //joined the game (vanilla)
     ) {
-      // handle disconnection etc.
-      if (this.config.DEBUG) {
-        console.log(`[DEBUG]: A player's connection status changed`);
-      }
-      const bukkitCheck = logLine.match(/.+?(?=\[\/)/);
-      if (bukkitCheck) {
-        return {
-          username: serverUsername,
-          message: `${bukkitCheck[0]} joined the game`,
-        };
-      } else {
-        if (this.config.DEBUG) {
-          console.log(`[DEBUG]:${serverUsername} ${logLine}`);
-        }
-        return { username: serverUsername, message: logLine };
-      }
+      return this.handlePlayerJoin(logLine, serverUsername);
     } else if (
       this.config.SHOW_PLAYER_CONN_LEAVE &&
       logLine.includes("left the game") //left the game (vanilla)
     ) {
-      // handle disconnection etc.
-      if (this.config.DEBUG) {
-        console.log("[DEBUG] A player disconnected");
-      }
-      return { username: serverUsername, message: logLine };
+      return this.handlePlayerLeave(logLine, serverUsername);
     } else if (
       this.config.SHOW_PLAYER_ADVANCEMENT &&
       logLine.includes("made the advancement")
     ) {
-      // handle advancements
-      if (this.config.DEBUG) {
-        console.log("[DEBUG] A player has made an advancement", {
-          username: `${this.config.SERVER_NAME} - Server`,
-          message: logLine,
-        });
-      }
-      return {
-        username: `${this.config.SERVER_NAME} - Server`,
-        message: logLine,
-      };
+      return this.handlePlayerAdvancement(logLine, serverUsername);
     } else if (this.config.SHOW_PLAYER_ME && logLine.startsWith("* ")) {
-      // /me commands have the bolded name and the action they did
-      const usernameMatch = data.match(/: \* ([a-zA-Z0-9_]{1,16}) (.*)/);
-      if (usernameMatch) {
-        const username = usernameMatch[1];
-        const rest = usernameMatch[2];
-        return { username: serverUsername, message: `**${username}** ${rest}` };
-      }
+      return this.handlePlayerMe(logLine, serverUsername);
     } else if (this.config.SHOW_PLAYER_DEATH) {
-      const deathMessageRegex = new RegExp(
-        this.config.REGEX_DEATH_MESSAGE ?? "^[\\w_]+ died"
-      );
-      const deathMessageMatch = logLine.match(deathMessageRegex);
-
-      if (deathMessageMatch) {
-        if (this.config.DEBUG) {
-          console.log(
-            `[DEBUG] A player died. Matched on "${deathMessageMatch[1]}"`
-          );
-        }
-        return { username: serverUsername, message: logLine };
-      }
+      return this.handlePlayerDeath(logLine, serverUsername);
     }
 
     return null;
