@@ -63,7 +63,10 @@ class MinecraftHandler {
     return this.createLogLine(username, message);
   }
 
-  private handlePlayerJoin(logLine: string, serverUsername: string): LogLine | null {
+  private handlePlayerJoin(
+    logLine: string,
+    serverUsername: string
+  ): LogLine | null {
     this.logDebug("A player's connection status changed");
 
     const bukkitCheck = logLine.match(/.+?(?=\[\/)/);
@@ -78,12 +81,18 @@ class MinecraftHandler {
     }
   }
 
-  private handlePlayerLeave(logLine: string, serverUsername: string): LogLine | null {
+  private handlePlayerLeave(
+    logLine: string,
+    serverUsername: string
+  ): LogLine | null {
     this.logDebug("A player disconnected");
     return { username: serverUsername, message: logLine };
   }
 
-  private handlePlayerAdvancement(logLine: string, serverUsername: string): LogLine | null {
+  private handlePlayerAdvancement(
+    logLine: string,
+    serverUsername: string
+  ): LogLine | null {
     this.logDebug("A player has made an advancement", {
       username: `${this.config.SERVER_NAME} - Server`,
       message: logLine,
@@ -94,7 +103,10 @@ class MinecraftHandler {
     };
   }
 
-  private handlePlayerMe(logLine: string, serverUsername: string): LogLine | null {
+  private handlePlayerMe(
+    logLine: string,
+    serverUsername: string
+  ): LogLine | null {
     // /me commands have the bolded name and the action they did
     const usernameMatch = logLine.match(/^\* ([a-zA-Z0-9_]{1,16}) (.*)/);
     if (usernameMatch) {
@@ -105,7 +117,10 @@ class MinecraftHandler {
     return null;
   }
 
-  private handlePlayerDeath(logLine: string, serverUsername: string): LogLine | null {
+  private handlePlayerDeath(
+    logLine: string,
+    serverUsername: string
+  ): LogLine | null {
     const deathMessageRegex = new RegExp(
       this.config.REGEX_DEATH_MESSAGE ?? "^[\\w_]+ died"
     );
@@ -151,7 +166,11 @@ class MinecraftHandler {
     const serverUsername = `${this.config.SERVER_NAME} - Server`;
 
     this.logDebug("Parsing: " + logLine + " :or: " + logLineData);
+    
+    return this.handleLogLine(logLine, serverUsername);
+  }
 
+  private handleLogLine(logLine: string, serverUsername: string): LogLine {
     if (logLine.startsWith("<")) {
       return this.handlePlayerChat(logLine);
     } else if (
