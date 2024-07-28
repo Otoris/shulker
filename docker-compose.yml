@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  shulker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shulker_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - /mnt/user/Minecraft/shulker:/mnt/user/Minecraft/shulker
+    restart: unless-stopped
