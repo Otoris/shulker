@@ -2,7 +2,7 @@
 FROM node:20
 
 # Set the working directory in the container
-WORKDIR /mnt/user/Minecraft/shulker
+WORKDIR /app
 
 # Copy package.json and package-lock.json
 COPY package*.json ./

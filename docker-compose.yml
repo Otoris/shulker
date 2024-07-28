@@ -9,5 +9,6 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - /mnt/user/Minecraft/shulker:/mnt/user/Minecraft/shulker
+      - ${LOCAL_REPO_PATH}:/app
+      - ${LOG_PATH}:/app/logs
     restart: unless-stopped
