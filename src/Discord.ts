@@ -1,224 +1,278 @@
-import {Client, Message, Snowflake, TextChannel} from 'discord.js'
+import {
+  ChannelType,
+  Client,
+  GatewayIntentBits,
+  Message,
+  Snowflake,
+  TextChannel,
+} from "discord.js";
 
-import emojiStrip from 'emoji-strip'
-import axios from 'axios'
+import emojiStrip from "emoji-strip";
+import axios from "axios";
 
-import { Config } from './Config'
+import { Config } from "./Config";
 
-import Rcon from './Rcon'
+import Rcon from "./Rcon";
 
 class Discord {
-  config: Config
-  client: Client
+  config: Config;
+  client: Client;
 
-  channel: Snowflake
+  channel: Snowflake;
 
-  constructor (config: Config, onReady?: () => void) {
-    this.config = config
+  constructor(config: Config, onReady?: () => void) {
+    this.config = config;
 
-    this.client = new Client()
-    if (onReady) this.client.once('ready', () => onReady())
-    this.client.on('message', (message: Message) => this.onMessage(message))
+    this.client = new Client({
+      intents: [
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildWebhooks,
+      ],
+    }); // or specify the required intents
+    if (onReady) this.client.once("ready", () => onReady());
+    this.client.on("message", (message: Message) => this.onMessage(message));
 
-    this.channel = config.DISCORD_CHANNEL_ID || ''
+    this.channel = config.DISCORD_CHANNEL_ID || "";
   }
 
-  public async init () {
+  public async init() {
     try {
-      await this.client.login(this.config.DISCORD_TOKEN)
+      await this.client.login(this.config.DISCORD_TOKEN);
       if (this.config.DISCORD_CHANNEL_NAME && !this.config.DISCORD_CHANNEL_ID)
-        this.getChannelIdFromName(this.config.DISCORD_CHANNEL_NAME)
+        this.getChannelIdFromName(this.config.DISCORD_CHANNEL_NAME);
     } catch (e) {
-      console.log('[ERROR] Could not authenticate with Discord: ' + e)
-      if (this.config.DEBUG) console.error(e)
+      console.log("[ERROR] Could not authenticate with Discord: " + e);
+      if (this.config.DEBUG) console.error(e);
     }
   }
 
-  private getChannelIdFromName (name: string) {
+  private getChannelIdFromName(name: string) {
     // remove the # if there is one
-    if (name.startsWith('#')) name = name.substring(1, name.length)
+    if (name.startsWith("#")) name = name.substring(1, name.length);
     // @ts-ignore
-    const channel: TextChannel = this.client.channels.find((c: TextChannel) => c.type === 'text' && c.name === name && !c.deleted)
+    const channel: TextChannel = this.client.channels.find(
+      (c: TextChannel) => c.type === ChannelType.GuildText && c.name === name
+    );
     if (channel) {
-      this.channel = channel.id
-      console.log(`[INFO] Found channel #${channel.name} (id: ${channel.id}) in the server "${channel.guild.name}"`)
+      this.channel = channel.id;
+      console.log(
+        `[INFO] Found channel #${channel.name} (id: ${channel.id}) in the server "${channel.guild.name}"`
+      );
     } else {
-      console.log(`[INFO] Could not find channel ${name}! Check that the name is correct or use the ID of the channel instead (DISCORD_CHANNEL_ID)!`)
-      process.exit(1)
+      console.log(
+        `[INFO] Could not find channel ${name}! Check that the name is correct or use the ID of the channel instead (DISCORD_CHANNEL_ID)!`
+      );
+      process.exit(1);
     }
   }
 
-  private parseDiscordWebhook (url: string) {
-    const re = /discordapp.com\/api\/webhooks\/([^\/]+)\/([^\/]+)/
+  private parseDiscordWebhook(url: string) {
+    const re = /discordapp.com\/api\/webhooks\/([^\/]+)\/([^\/]+)/;
 
     // the is of the webhook
-    let id = null
-    let token = null
+    let id = null;
+    let token = null;
 
     if (!re.test(url)) {
       // In case the url changes at some point, I will warn if it still works
-      console.log('[WARN] The Webhook URL may not be valid!')
+      console.log("[WARN] The Webhook URL may not be valid!");
     } else {
-      const match = url.match(re)
+      const match = url.match(re);
       if (match) {
-        id = match[1]
-        token = match[2]
+        id = match[1];
+        token = match[2];
       }
     }
 
-    return { id, token }
+    return { id, token };
   }
 
-  private async onMessage (message: Message) {
+  private async onMessage(message: Message) {
     // no channel, done
-    if (!this.channel) return
+    if (!this.channel) return;
     // don't want to check other channels
-    if (message.channel.id !== this.channel || message.channel.type !== 'text') return
+    if (message.channel.id !== this.channel || ChannelType.GuildText) return;
     // if using webhooks, ignore this!
-    if (message.webhookID) {
+    if (message.webhookId) {
       // backwards compatability with older config
-      if (this.config.USE_WEBHOOKS && this.config.IGNORE_WEBHOOKS === undefined) return
+      if (this.config.USE_WEBHOOKS && this.config.IGNORE_WEBHOOKS === undefined)
+        return;
 
       // if ignoring all webhooks, ignore
       if (this.config.IGNORE_WEBHOOKS) {
-        return
+        return;
       } else if (this.config.USE_WEBHOOKS) {
         // otherwise, ignore all webhooks that are not the same as this one
-        const { id } = this.parseDiscordWebhook(this.config.WEBHOOK_URL)
-        if (id === message.webhookID) {
-          if (this.config.DEBUG) console.log('[INFO] Ignoring webhook from self')
-          return
+        const { id } = this.parseDiscordWebhook(this.config.WEBHOOK_URL);
+        if (id === message.webhookId) {
+          if (this.config.DEBUG)
+            console.log("[INFO] Ignoring webhook from self");
+          return;
         }
       }
     }
     // if the same user as the bot, ignore
-    if (message.author.id === this.client?.user?.id) return
+    if (message.author.id === this.client?.user?.id) return;
     // ignore any attachments
-    if (message.attachments.array().length) return
+    if (Array.from(message.attachments.values()).length) return;
 
-    const rcon = new Rcon(this.config.MINECRAFT_SERVER_RCON_IP, this.config.MINECRAFT_SERVER_RCON_PORT, this.config.DEBUG)
+    const rcon = new Rcon(
+      this.config.MINECRAFT_SERVER_RCON_IP,
+      this.config.MINECRAFT_SERVER_RCON_PORT,
+      this.config.DEBUG
+    );
     try {
-      await rcon.auth(this.config.MINECRAFT_SERVER_RCON_PASSWORD)
+      await rcon.auth(this.config.MINECRAFT_SERVER_RCON_PASSWORD);
     } catch (e) {
-      console.log('[ERROR] Could not auth with the server!')
-      if (this.config.DEBUG) console.error(e)
+      console.log("[ERROR] Could not auth with the server!");
+      if (this.config.DEBUG) console.error(e);
     }
 
-    let command = ''
-    if (this.config.ALLOW_SLASH_COMMANDS && this.config.SLASH_COMMAND_ROLES && message.cleanContent.startsWith('/')) {
-      const author = message.member
-      if (author?.roles.cache.find(r => this.config.SLASH_COMMAND_ROLES.includes(r.name))) {
+    let command = "";
+    if (
+      this.config.ALLOW_SLASH_COMMANDS &&
+      this.config.SLASH_COMMAND_ROLES &&
+      message.cleanContent.startsWith("/")
+    ) {
+      const author = message.member;
+      if (
+        author?.roles.cache.find((r) =>
+          this.config.SLASH_COMMAND_ROLES.includes(r.name)
+        )
+      ) {
         // send the raw command, can be dangerous...
-        command = message.cleanContent
+        command = message.cleanContent;
       } else {
-        console.log('[INFO] User attempted a slash command without a role')
+        console.log("[INFO] User attempted a slash command without a role");
       }
     } else {
-      command = `tellraw @a ${this.makeMinecraftTellraw(message)}`
+      command = `tellraw @a ${this.makeMinecraftTellraw(message)}`;
     }
 
-    if (this.config.DEBUG) console.log(`[DEBUG] Sending command "${command}" to the server`)
+    if (this.config.DEBUG)
+      console.log(`[DEBUG] Sending command "${command}" to the server`);
 
     if (command) {
       await rcon.command(command).catch((e) => {
-        console.log('[ERROR] Could not send command!')
-        if (this.config.DEBUG) console.error(e)
-      })
+        console.log("[ERROR] Could not send command!");
+        if (this.config.DEBUG) console.error(e);
+      });
     }
-    rcon.close()
+    rcon.close();
   }
 
   private makeMinecraftTellraw(message: Message): string {
-    const variables: {[index: string]: string} = {
+    const variables: { [index: string]: string } = {
       username: emojiStrip(message.author.username),
-      nickname: message?.member?.nickname ? emojiStrip(message.member.nickname) : emojiStrip(message.author.username),
+      nickname: message?.member?.nickname
+        ? emojiStrip(message.member.nickname)
+        : emojiStrip(message.author.username),
       discriminator: message.author.discriminator,
-      text: emojiStrip(message.cleanContent)
-    }
+      text: emojiStrip(message.cleanContent),
+    };
     // hastily use JSON to encode the strings
     for (const v of Object.keys(variables)) {
-      variables[v] = JSON.stringify(variables[v]).slice(1,-1)
+      variables[v] = JSON.stringify(variables[v]).slice(1, -1);
     }
 
-    return this.config.MINECRAFT_TELLRAW_TEMPLATE
-      .replace(/%username%/g, variables.username)
+    return this.config.MINECRAFT_TELLRAW_TEMPLATE.replace(
+      /%username%/g,
+      variables.username
+    )
       .replace(/%nickname%/g, variables.nickname)
       .replace(/%discriminator%/g, variables.discriminator)
-      .replace(/%message%/g, variables.text)
+      .replace(/%message%/g, variables.text);
   }
 
   private replaceDiscordMentions(message: string): string {
-    const possibleMentions = message.match(/@[^#\s]*[#]?[0-9]{4}/gim)
+    const possibleMentions = message.match(/@[^#\s]*[#]?[0-9]{4}/gim);
     if (possibleMentions) {
       for (let mention of possibleMentions) {
-        const mentionParts = mention.split('#')
-        let username = mentionParts[0].replace('@', '')
+        const mentionParts = mention.split("#");
+        let username = mentionParts[0].replace("@", "");
         if (mentionParts.length > 1) {
           if (this.config.ALLOW_USER_MENTIONS) {
-            const user = this.client.users.cache.find(user => user.username === username && user.discriminator === mentionParts[1])
+            const user = this.client.users.cache.find(
+              (user) =>
+                user.username === username &&
+                user.discriminator === mentionParts[1]
+            );
             if (user) {
-              message = message.replace(mention, '<@' + user.id + '>')
+              message = message.replace(mention, "<@" + user.id + ">");
             }
           }
         }
 
-        if (['here', 'everyone'].includes(username)) {
+        if (["here", "everyone"].includes(username)) {
           // remove these large pings
           if (!this.config.ALLOW_HERE_EVERYONE_MENTIONS) {
             message = message
-              .replace('@everyone', '@ everyone')
-              .replace('@here', '@ here')
+              .replace("@everyone", "@ everyone")
+              .replace("@here", "@ here");
           }
         }
       }
     }
-    return message
+    return message;
   }
 
-  private makeDiscordWebhook (username: string, message: string) {
-    message = this.replaceDiscordMentions(message)
+  private makeDiscordWebhook(username: string, message: string) {
+    message = this.replaceDiscordMentions(message);
 
-    let avatarURL
-    if (username === this.config.SERVER_NAME + ' - Server') { // use avatar for the server
-      avatarURL = this.config.SERVER_IMAGE || 'https://minotar.net/helm/Steve/256.png'
-    } else { // use avatar for player
-      avatarURL = `https://minotar.net/helm/${username}/256.png`
+    let avatarURL;
+    if (username === this.config.SERVER_NAME + " - Server") {
+      // use avatar for the server
+      avatarURL =
+        this.config.SERVER_IMAGE || "https://minotar.net/helm/Steve/256.png";
+    } else {
+      // use avatar for player
+      avatarURL = `https://minotar.net/helm/${username}/256.png`;
     }
 
     return {
       username: username,
       content: message,
-      'avatar_url': avatarURL,
-    }
+      avatar_url: avatarURL,
+    };
   }
 
   private makeDiscordMessage(username: string, message: string) {
-    message = this.replaceDiscordMentions(message)
+    message = this.replaceDiscordMentions(message);
 
-    return this.config.DISCORD_MESSAGE_TEMPLATE
-      .replace('%username%', username)
-      .replace('%message%', message)
+    return this.config.DISCORD_MESSAGE_TEMPLATE.replace(
+      "%username%",
+      username
+    ).replace("%message%", message);
   }
 
-  public async sendMessage (username: string, message: string) {
+  public async sendMessage(username: string, message: string) {
     if (this.config.USE_WEBHOOKS) {
-      const webhook = this.makeDiscordWebhook(username, message)
+      const webhook = this.makeDiscordWebhook(username, message);
       try {
-        await axios.post(this.config.WEBHOOK_URL, webhook, { headers: { 'Content-Type': 'application/json' } })
+        await axios.post(this.config.WEBHOOK_URL, webhook, {
+          headers: { "Content-Type": "application/json" },
+        });
       } catch (e) {
-        console.log('[ERROR] Could not send Discord message through WebHook!')
-        if (this.config.DEBUG) console.log(e)
+        console.log("[ERROR] Could not send Discord message through WebHook!");
+        if (this.config.DEBUG) console.log(e);
       }
     } else {
       // find the channel
-      const channel = this.client.channels.cache.find((ch) => ch.id === this.config.DISCORD_CHANNEL_ID && ch.type === 'text') as TextChannel
+      const channel = this.client.channels.cache.find(
+        (ch) =>
+          ch.id === this.config.DISCORD_CHANNEL_ID &&
+          ch.type === ChannelType.GuildText
+      ) as TextChannel;
       if (channel) {
-        await channel.send(this.makeDiscordMessage(username, message))
+        await channel.send(this.makeDiscordMessage(username, message));
       } else {
-        console.log(`[ERROR] Could not find channel with ID ${this.config.DISCORD_CHANNEL_ID}!`)
+        console.log(
+          `[ERROR] Could not find channel with ID ${this.config.DISCORD_CHANNEL_ID}!`
+        );
       }
     }
   }
 }
 
-export default Discord
+export default Discord;
