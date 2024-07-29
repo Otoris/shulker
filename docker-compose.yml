@@ -7,6 +7,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - /app:${LOCAL_REPO_PATH}
-      - /app/logs:${LOG_PATH}
+      - ${LOCAL_REPO_PATH}/config.json:/app/config.json
+      - ${LOG_PATH}:/app/logs
+    environment:
+      - CONFIG_PATH=/app/config.json
     restart: unless-stopped

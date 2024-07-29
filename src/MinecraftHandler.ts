@@ -138,16 +138,16 @@ class MinecraftHandler {
       this.logDebug("Line ignored");
       return null;
     }
-
+  
     this.logDebug("Received " + data);
-
+  
     const logLineDataRegex = new RegExp(
       `${this.config.REGEX_SERVER_PREFIX || "\\[Server thread/INFO\\]:"} (.*)`
     );
-
+  
     // get the part after the log prefix, so all the actual data is here
     const logLineData = data.match(logLineDataRegex);
-
+  
     if (!logLineDataRegex.test(data) || !logLineData) {
       this.logDebug("Regex could not match the string:");
       this.logDebug(
@@ -159,18 +159,28 @@ class MinecraftHandler {
       );
       return null;
     }
-
-    const logLine = logLineData[2];
-
+  
+    // Adjusted to correctly extract log line data
+    const logLine = logLineData[2]; 
+  
+    this.logDebug("Parsing: " + logLine + " :or: " + logLineData);
+  
+    // Ensure logLine is defined before proceeding
+    if (!logLine) {
+      this.logDebug("logLine is undefined or null, skipping processing.");
+      return null;
+    }
+  
     // the username used for server messages
     const serverUsername = `${this.config.SERVER_NAME} - Server`;
-
-    this.logDebug("Parsing: " + logLine + " :or: " + logLineData);
-    
+  
     return this.handleLogLine(logLine, serverUsername);
   }
 
-  private handleLogLine(logLine: string, serverUsername: string): LogLine {
+  private handleLogLine(logLine: string, serverUsername: string): LogLine | null {
+    // Ensure logLine is defined before using it
+    if (!logLine) return null;
+  
     if (logLine.startsWith("<")) {
       return this.handlePlayerChat(logLine);
     } else if (
@@ -193,7 +203,7 @@ class MinecraftHandler {
     } else if (this.config.SHOW_PLAYER_DEATH) {
       return this.handlePlayerDeath(logLine, serverUsername);
     }
-
+  
     return null;
   }
 
