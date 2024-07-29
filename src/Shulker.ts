@@ -12,7 +12,8 @@ class Shulker {
   }
 
   loadConfig () {
-    const configFile = (process.argv.length > 2) ? process.argv[2] : '../config.json'
+    const configFile = (process.argv.length > 2) ? process.argv[2] : process.env.CONFIG_PATH || '../config.json';
+
     console.log('[INFO] Using configuration file:', configFile)
     this.config = require(configFile)
     if (!this.config) {
