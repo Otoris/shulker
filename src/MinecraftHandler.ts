@@ -148,7 +148,7 @@ class MinecraftHandler {
     // get the part after the log prefix, so all the actual data is here
     const logLineData = data.match(logLineDataRegex);
   
-    if (!logLineDataRegex.test(data) || !logLineData) {
+    if (!logLineDataRegex.test(data) || !logLineData || logLineData.length < 2) {
       this.logDebug("Regex could not match the string:");
       this.logDebug(
         'Received: "' +
@@ -159,8 +159,11 @@ class MinecraftHandler {
       );
       return null;
     }
-  
+    
     // Adjusted to correctly extract log line data
+    // maybe investigate groups and checking length... u dont really do this yet
+    this.logDebug("logLineData array: " + JSON.stringify(logLineData));
+
     const logLine = logLineData[2]; 
   
     this.logDebug("Parsing: " + logLine + " :or: " + logLineData);
@@ -173,15 +176,23 @@ class MinecraftHandler {
   
     // the username used for server messages
     const serverUsername = `${this.config.SERVER_NAME} - Server`;
+    this.logDebug("Server username: " + serverUsername);
   
+    this.logDebug("Handling log line");
     return this.handleLogLine(logLine, serverUsername);
   }
 
   private handleLogLine(logLine: string, serverUsername: string): LogLine | null {
     // Ensure logLine is defined before using it
-    if (!logLine) return null;
+    this.logDebug("Handling log line: " + logLine);
+    if (!logLine) {
+      this.logDebug("logLine is null, skipping processing.");
+      return null;
+    }
+
   
     if (logLine.startsWith("<")) {
+      this.logDebug("Chat message detected");
       return this.handlePlayerChat(logLine);
     } else if (
       this.config.SHOW_PLAYER_CONN_JOIN &&
