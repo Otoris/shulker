@@ -39,12 +39,23 @@ class Discord {
   public async init() {
     try {
       await this.client.login(this.config.DISCORD_TOKEN);
-      if (this.config.DISCORD_CHANNEL_NAME && !this.config.DISCORD_CHANNEL_ID)
+      if (this.config.DISCORD_CHANNEL_NAME && !this.config.DISCORD_CHANNEL_ID) {
+        this.logDebug("Getting channel ID from name " + this.config.DISCORD_CHANNEL_NAME);
         this.getChannelIdFromName(this.config.DISCORD_CHANNEL_NAME);
+      }
     } catch (e) {
-      console.log("[ERROR] Could not authenticate with Discord: " + e);
-      if (this.config.DEBUG) console.error(e);
+      this.logError("[ERROR] Could not authenticate with Discord: " + e);
     }
+  }
+
+  private logDebug(message: string, data?: any) {
+    if (this.config.DEBUG) {
+      console.log(`[DEBUG] ${message}`, data);
+    }
+  }
+
+  private logError(message: string, data?: any) {
+    console.log(`[ERROR] ${message}`, data);
   }
 
   private getChannelIdFromName(name: string) {
@@ -56,12 +67,12 @@ class Discord {
     );
     if (channel) {
       this.channel = channel.id;
-      console.log(
-        `[INFO] Found channel #${channel.name} (id: ${channel.id}) in the server "${channel.guild.name}"`
+      this.logDebug(
+        `Found channel #${channel.name} (id: ${channel.id}) in the server "${channel.guild.name}"`
       );
     } else {
-      console.log(
-        `[INFO] Could not find channel ${name}! Check that the name is correct or use the ID of the channel instead (DISCORD_CHANNEL_ID)!`
+      this.logDebug(
+        `Could not find channel ${name}! Check that the name is correct or use the ID of the channel instead (DISCORD_CHANNEL_ID)!`
       );
       process.exit(1);
     }
@@ -76,7 +87,7 @@ class Discord {
 
     if (!re.test(url)) {
       // In case the url changes at some point, I will warn if it still works
-      console.log("[WARN] The Webhook URL may not be valid!");
+      this.logDebug("The Webhook URL may not be valid!");
     } else {
       const match = url.match(re);
       if (match) {
@@ -101,13 +112,13 @@ class Discord {
 
       // if ignoring all webhooks, ignore
       if (this.config.IGNORE_WEBHOOKS) {
+        this.logDebug("Ignoring all webhooks");
         return;
       } else if (this.config.USE_WEBHOOKS) {
         // otherwise, ignore all webhooks that are not the same as this one
         const { id } = this.parseDiscordWebhook(this.config.WEBHOOK_URL);
         if (id === message.webhookId) {
-          if (this.config.DEBUG)
-            console.log("[INFO] Ignoring webhook from self");
+          this.logDebug("Ignoring webhook from self");
           return;
         }
       }
@@ -124,9 +135,9 @@ class Discord {
     );
     try {
       await rcon.auth(this.config.MINECRAFT_SERVER_RCON_PASSWORD);
+      this.logDebug("Authenticated with the server!");
     } catch (e) {
-      console.log("[ERROR] Could not auth with the server!");
-      if (this.config.DEBUG) console.error(e);
+      this.logError("Could not auth with the server!");
     }
 
     let command = "";
@@ -144,19 +155,16 @@ class Discord {
         // send the raw command, can be dangerous...
         command = message.cleanContent;
       } else {
-        console.log("[INFO] User attempted a slash command without a role");
+        this.logDebug("User attempted a slash command without a role");
       }
     } else {
       command = `tellraw @a ${this.makeMinecraftTellraw(message)}`;
     }
-
-    if (this.config.DEBUG)
-      console.log(`[DEBUG] Sending command "${command}" to the server`);
+      this.logDebug(`[DEBUG] Sending command "${command}" to the server`);
 
     if (command) {
       await rcon.command(command).catch((e) => {
-        console.log("[ERROR] Could not send command!");
-        if (this.config.DEBUG) console.error(e);
+        this.logError("[ERROR] Could not send command!");
       });
     }
     rcon.close();
@@ -254,8 +262,7 @@ class Discord {
           headers: { "Content-Type": "application/json" },
         });
       } catch (e) {
-        console.log("[ERROR] Could not send Discord message through WebHook!");
-        if (this.config.DEBUG) console.log(e);
+        this.logError("Could not send Discord message through Webhook!");
       }
     } else {
       // find the channel
@@ -267,8 +274,8 @@ class Discord {
       if (channel) {
         await channel.send(this.makeDiscordMessage(username, message));
       } else {
-        console.log(
-          `[ERROR] Could not find channel with ID ${this.config.DISCORD_CHANNEL_ID}!`
+        this.logError(
+          `Could not find channel with ID ${this.config.DISCORD_CHANNEL_ID}!`
         );
       }
     }
