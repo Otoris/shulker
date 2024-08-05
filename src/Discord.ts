@@ -39,11 +39,13 @@ class Discord {
 
   public async init() {
     try {
+      this.logDebug("Authenticating with Discord...");
       await this.client.login(this.config.DISCORD_TOKEN);
       if (this.config.DISCORD_CHANNEL_NAME && !this.config.DISCORD_CHANNEL_ID) {
         this.logDebug("Getting channel ID from name " + this.config.DISCORD_CHANNEL_NAME);
         this.getChannelIdFromName(this.config.DISCORD_CHANNEL_NAME);
       }
+      this.logDebug("Authenticated with Discord!");
     } catch (e) {
       this.logError("[ERROR] Could not authenticate with Discord: " + e);
     }
@@ -101,15 +103,27 @@ class Discord {
   }
 
   private async onMessage(message: Message) {
+    this.logDebug("Received message from Discord!");
     // no channel, done
-    if (!this.channel) return;
+    if (!this.channel) {
+      this.logDebug("No channel recieved, ignoring message");
+      return;
+    }
+    this.logDebug("Channel recieved message from: " + this.channel);
     // don't want to check other channels
-    if (message.channel.id !== this.channel || ChannelType.GuildText) return;
+    if (message.channel.id !== this.channel || ChannelType.GuildText) {
+      this.logDebug("Message is not in the correct channel!");
+      return;
+    }
+    this.logDebug("Message is in the correct channel!");
     // if using webhooks, ignore this!
     if (message.webhookId) {
+      this.logDebug("Message is from a webhook!");
       // backwards compatability with older config
-      if (this.config.USE_WEBHOOKS && this.config.IGNORE_WEBHOOKS === undefined)
+      if (this.config.USE_WEBHOOKS && this.config.IGNORE_WEBHOOKS === undefined) {
+        this.logDebug("Ignoring all webhooks due to config - end onMessage");
         return;
+      }
 
       // if ignoring all webhooks, ignore
       if (this.config.IGNORE_WEBHOOKS) {
@@ -125,9 +139,15 @@ class Discord {
       }
     }
     // if the same user as the bot, ignore
-    if (message.author.id === this.client?.user?.id) return;
+    if (message.author.id === this.client?.user?.id) {
+      this.logDebug("Ignoring message from self");
+      return;
+    }
     // ignore any attachments
-    if (Array.from(message.attachments.values()).length) return;
+    if (Array.from(message.attachments.values()).length) {
+      this.logDebug("Ignoring message with attachments");
+      return;
+    }
 
     const rcon = new Rcon(
       this.config.MINECRAFT_SERVER_RCON_IP,
@@ -147,25 +167,29 @@ class Discord {
       this.config.SLASH_COMMAND_ROLES &&
       message.cleanContent.startsWith("/")
     ) {
+      this.logDebug("Slash command detected...");
       const author = message.member;
       if (
         author?.roles.cache.find((r) =>
           this.config.SLASH_COMMAND_ROLES.includes(r.name)
         )
       ) {
+        this.logDebug("User has a role to use slash commands");
         // send the raw command, can be dangerous...
         command = message.cleanContent;
       } else {
-        this.logDebug("User attempted a slash command without a role");
+        this.logDebug("User attempted a slash command without a role...");
       }
     } else {
+      this.logDebug("Creating a command with makeMinecraftTellRaw...");
       command = `tellraw @a ${this.makeMinecraftTellraw(message)}`;
     }
-      this.logDebug(`[DEBUG] Sending command "${command}" to the server`);
+
+    this.logDebug(`Sending command "${command}" to the server`);
 
     if (command) {
       await rcon.command(command).catch((e) => {
-        this.logError("[ERROR] Could not send command!");
+        this.logError("Could not send command!");
       });
     }
     rcon.close();
@@ -184,14 +208,19 @@ class Discord {
     for (const v of Object.keys(variables)) {
       variables[v] = JSON.stringify(variables[v]).slice(1, -1);
     }
+    this.logDebug("Variables for tellraw:", variables);
 
-    return this.config.MINECRAFT_TELLRAW_TEMPLATE.replace(
+    const result = this.config.MINECRAFT_TELLRAW_TEMPLATE.replace(
       /%username%/g,
       variables.username
     )
       .replace(/%nickname%/g, variables.nickname)
       .replace(/%discriminator%/g, variables.discriminator)
       .replace(/%message%/g, variables.text);
+
+    this.logDebug("Resulting tellraw:", result);
+
+    return result;
   }
 
   private replaceDiscordMentions(message: string): string {
