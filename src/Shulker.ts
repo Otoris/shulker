@@ -1,8 +1,7 @@
 import DiscordClient from './Discord'
-import Handler, { LogLine } from './MinecraftHandler'
+import MinecraftHandler, { LogLine } from './MinecraftHandler'
 
 import { Config } from './Config'
-import MinecraftHandler from './MinecraftHandler'
 
 class Shulker {
   config: Config
