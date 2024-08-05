@@ -5,6 +5,7 @@ import {
   Message,
   Snowflake,
   TextChannel,
+  Events
 } from "discord.js";
 
 import emojiStrip from "emoji-strip";
@@ -28,10 +29,10 @@ class Discord {
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildWebhooks,
-      ],
+      ]
     }); // or specify the required intents
-    if (onReady) this.client.once("ready", () => onReady());
-    this.client.on("message", (message: Message) => this.onMessage(message));
+    if (onReady) this.client.once(Events.ClientReady, () => onReady());
+    this.client.on(Events.MessageCreate, (message: Message) => this.onMessage(message));
 
     this.channel = config.DISCORD_CHANNEL_ID || "";
   }
