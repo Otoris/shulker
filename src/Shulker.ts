@@ -37,6 +37,7 @@ class Shulker {
   }
 
   onDiscordReady() {
+    this.logDebug("onDiscordReady callback hit");
     this.minecraftHandler.init(async (data: LogLine) => {
       this.logDebug("Initalizing minecraftHandler callback");
       if (data) {
