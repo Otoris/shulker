@@ -23,18 +23,30 @@ class Discord {
 
   constructor(config: Config, onReady?: () => void) {
     this.config = config;
+    this.channel = config.DISCORD_CHANNEL_ID || "";
 
     this.client = new Client({
       intents: [
+        GatewayIntentBits.Guilds, 
+        GatewayIntentBits.GuildMessages, 
         GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.GuildWebhooks,
+        GatewayIntentBits.GuildWebhooks
       ]
     }); // or specify the required intents
     if (onReady) this.client.once(Events.ClientReady, () => onReady());
-    this.client.on(Events.MessageCreate, (message: Message) => this.onMessage(message));
 
-    this.channel = config.DISCORD_CHANNEL_ID || "";
+    this.client.on("messageCreate", (message: Message) => this.onMessage(message));
+
+  }
+
+  private logDebug(message: string, data?: any) {
+    if (this.config.DEBUG) {
+      console.log(`[DEBUG] ${message}`, data);
+    }
+  }
+
+  private logError(message: string, data?: any) {
+    console.log(`[ERROR] ${message}`, data);
   }
 
   public async init() {
@@ -49,16 +61,6 @@ class Discord {
     } catch (e) {
       this.logError("[ERROR] Could not authenticate with Discord: " + e);
     }
-  }
-
-  private logDebug(message: string, data?: any) {
-    if (this.config.DEBUG) {
-      console.log(`[DEBUG] ${message}`, data);
-    }
-  }
-
-  private logError(message: string, data?: any) {
-    console.log(`[ERROR] ${message}`, data);
   }
 
   private getChannelIdFromName(name: string) {
