@@ -156,7 +156,9 @@ class Discord {
       this.config.MINECRAFT_SERVER_RCON_PORT,
       this.config.DEBUG
     );
+    
     try {
+      this.logDebug("Authenticating with the RCON server...");
       await rcon.auth(this.config.MINECRAFT_SERVER_RCON_PASSWORD);
       this.logDebug("Authenticated with the server!");
     } catch (e) {
