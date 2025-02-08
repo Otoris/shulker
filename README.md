@@ -3,28 +3,33 @@
 > Connects [Discord](https://discordapp.com/) and [Minecraft](https://minecraft.net) Servers by sending messages back and forth without any mods or plugins.
 
 ## Notice
+
 This project has recently gone under a rewrite and the format for `config.json` is not directly backwards compatible with previous versions.
 See [below](#upgrade-instructions) for details.
 
 ## In Action
+
 ![discord-mc](http://i.thedestruc7i0n.ca/I5anbg.gif)
 
 ## Features
+
 - Sends message to and from Vanilla Minecraft servers
 - Can send messages regarding advancements, when players join and leave, and player deaths
 - Allows admins to send commands to Minecraft through Discord
- 
+
 ## Installation and usage
 
-Create a Discord bot here: https://discordapp.com/developers/applications/me
+Create a Discord bot here: <https://discordapp.com/developers/applications/me>
 
 Then, add the bot to your Discord server using the following link, replace the Client ID with that of your bot.
-```
+
+```url
 https://discordapp.com/oauth2/authorize?client_id=<CLIENT ID>&scope=bot
 ```
 
 In your Minecraft server.properties, make sure you have the following and restart the server:
-```
+
+```config
 enable-rcon=true
 rcon.password=<your password>
 rcon.port=<1-65535>
@@ -32,28 +37,33 @@ rcon.port=<1-65535>
 
 Clone repository onto a server, edit ```config.json``` (see below for more info) and change any options.
 Then, in the repository folder:
+
 ```sh
-$ yarn
-$ yarn build && yarn start
+yarn
+yarn build && yarn start
 ```
 
 Or using Docker:
+
 ```sh
 docker build -t shulker .
 docker run -d -v /path/to/config.json:/usr/src/app/config.json shulker
 ```
 
 If you need to read from another docker on your server, first create a shared network for the containers to communicate on:
+
 ```sh
 docker network create minecraft
 ```
 
 Then, start your Minecraft server with the following options:
+
 ```sh
 docker run -d -v /path/to/config.json:/usr/src/app/config.json --network="container:minecraft" shulker
 ```
 
 Additionally, you will likely need to link your Minecraft server log folder to the shulker docker:
+
 ```sh
 docker run -d -v /path/to/config.json:/usr/src/app/config.json -v /path/to/minecraft/logs:/usr/src/app/logs --network="container:minecraft" shulker
 ```
@@ -64,14 +74,15 @@ Otherwise, perform the following command on the server hosting (in a screen/tmux
 ``` sh
 tail -F /PATH_TO_MINECRAFT_SERVER_INSTALL/logs/latest.log | grep --line-buffered ": <" | while read x ; do echo -ne $x | curl -X POST -d @- http://YOUR_URL/minecraft/hook ; done
 ```
+
 (The above command will also be given to you if you are not using a local file when you start up Shulker)
 
 You can also easily Deploy to Heroku and the like, just be sure to edit `YOUR_URL` in the command to match accordingly.
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
 
-
 ### Configuration
+
 ```js
 {
     "PORT": 8000, /* Port you want to run the webserver for the hook on */
@@ -116,29 +127,35 @@ You can also easily Deploy to Heroku and the like, just be sure to edit `YOUR_UR
 ```
 
 ## FAQ
-* How do I make this work on a modded server?
+
+- How do I make this work on a modded server?
   - Try replacing `REGEX_SERVER_PREFIX` with `"\\[Server thread/INFO\\] \\[.*\\]:"`
   
-* Why can't I send commands even if I have the option enabled?
+- Why can't I send commands even if I have the option enabled?
   - Make sure that you have a role on the server which is put in the array `SLASH_COMMAND_ROLES` case-sensitive.
     - e.g. `"SLASH_COMMAND_ROLES": ["Admin"]`
 
 ## Upgrade Instructions
+
 From version 2 to version 3:
+
 - The main change is that you need to split your `REGEX_MATCH_CHAT_MC` to both `REGEX_MATCH_CHAT_MC` and `REGEX_SERVER_PREFIX`.
   See the [configuration](#configuration) above for details.
 
 ## Upcoming
+
 None
 
 ## Suggestions
+
 If you have any suggestions or feature requests, feel free to add an issue and I will take a look.
 
 ## Thanks
-* [hydrabolt](https://github.com/hydrabolt) for discord.js
-* [qrush](https://github.com/qrush) for the idea of this ([wither](https://github.com/qrush/wither))
-* [SecretOnline](https://github.com/secretonline) for Rcon reconnecting and for making it only send messages in specified channel
-* [TheZackCodec](https://github.com/TheZackCodec/) for the updates in server based messages
+
+- [hydrabolt](https://github.com/hydrabolt) for discord.js
+- [qrush](https://github.com/qrush) for the idea of this ([wither](https://github.com/qrush/wither))
+- [SecretOnline](https://github.com/secretonline) for Rcon reconnecting and for making it only send messages in specified channel
+- [TheZackCodec](https://github.com/TheZackCodec/) for the updates in server based messages
 
 ## License
 
