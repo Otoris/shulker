@@ -100,7 +100,7 @@ class Rcon {
     buff.writeInt8(0, length - 2)
     buff.writeInt8(0, length - 1)
 
-    this.socket.write(buff)
+    this.socket.write(Uint8Array.from(buff))
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
