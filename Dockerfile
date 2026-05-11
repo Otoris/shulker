@@ -9,7 +9,6 @@ COPY package*.json ./
 
 # Install dependencies
 RUN npm install
-RUN npm install typescript@latest @types/ws@latest
 
 
 # Bundle app source
