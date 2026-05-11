@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["es2018", "esnext"],
+    "target": "es2020",
+    "lib": ["es2020", "esnext"],
     "allowJs": true,
     "esModuleInterop": true,
     "removeComments": true,
     "strict": true,
     "strictNullChecks": false,
     "strictFunctionTypes": false,
+    "rootDir": "./src",
     "outDir": "build/",
-    "moduleResolution": "node",
+    "module": "node16",
+    "moduleResolution": "node16",
     "types": ["node", "jest"],
     "skipLibCheck": true
   },
